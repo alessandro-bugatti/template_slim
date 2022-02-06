@@ -55,8 +55,7 @@ $app->run();
 Poichè l'applicazione ha bisogno che tutte le richieste HTTP arrivino al file *index.php*, è necessario istruire il web server per fare in modo che ogni richiesta che arriva faccia partire il file *index.php*, indipendentemte da quale sia la richiesta presente nell'URL.
 
 Usando Apache presente in Xampp bisogna seguire questi passi
-- abilitare il modulo di URL rewriting. Per far questo aprire con un editor di testo (anche PHPStorm va bene) il file ```
-- directory_di_xampp/apache/conf/httpd.conf``` e controllare se la riga
+- abilitare il modulo di URL rewriting. Per far questo aprire con un editor di testo (anche PHPStorm va bene) il file ```directory_di_xampp/apache/conf/httpd.conf``` e controllare se la riga
 ```apacheconf
 LoadModule rewrite_module modules/mod_rewrite.so
 ```
