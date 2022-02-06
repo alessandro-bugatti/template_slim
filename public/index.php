@@ -14,8 +14,8 @@ $app->get('/', function (Request $request, Response $response, $args) {
     return $response;
 });
 
-$app->get('/prova/{id}', function (Request $request, Response $response, $args) {
-    $response->getBody()->write("prova " . $args['id']);
+$app->get('/altra_pagina', function (Request $request, Response $response, $args) {
+    $response->getBody()->write("Questa è un'altra pagina");
     return $response;
 });
 
