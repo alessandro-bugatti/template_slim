@@ -19,4 +19,29 @@ $app->get('/altra_pagina', function (Request $request, Response $response, $args
     return $response;
 });
 
+$app->get('/ciao/{nome}', function (Request $request, Response $response, $args) {
+    $response->getBody()->write("Ciao" . $args['nome']);
+    return $response;
+});
+
+$app->get('/car/{id}', function (Request $request, Response $response, $args) {
+    $response->getBody()->write("Dettagli auto con id = " . $args['id']);
+    return $response;
+});
+
+$app->get('/cars', function (Request $request, Response $response, $args) {
+    $cars[] = [
+        'nome' => 'Ferrari',
+        'costo' => '80000'
+    ];
+    $cars[] = [
+        'nome' => 'Fiat',
+        'costo' => '8000'
+    ];
+    $risposta = json_encode($cars);
+    $response->getBody()->write($risposta);
+    return $response
+        ->withHeader('Content-Type', 'application/json');
+});
+
 $app->run();
