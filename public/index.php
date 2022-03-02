@@ -3,6 +3,8 @@ use DI\Container as Container;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
+use Util\Connection;
+
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -112,6 +114,13 @@ OEF;
         ->withHeader('Content-Type', 'application/json');
 });
 
-
+$app->get('/continent', function (Request $request, Response $response, $args){
+   $pdo = Connection::getInstance();
+   $sql = 'SELECT DISTINCT Continent FROM country';
+   $stmt = $pdo->query($sql);
+   foreach ($stmt as $row)
+       $response->getBody()->write($row['Continent']);
+   return $response;
+});
 
 $app->run();
