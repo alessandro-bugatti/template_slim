@@ -5,8 +5,8 @@
  * secondo la propria configurazione
  */
 
-define('DB_HOST', 'host');
-define('DB_NAME', 'db_name');
-define('DB_USER', 'user');
-define('DB_PASSWORD', 'password');
-define('DB_CHAR', 'utf8');
+const DB_HOST = 'host';
+const DB_NAME = 'db_name';
+const DB_USER = 'user';
+const DB_PASSWORD = 'password';
+const DB_CHAR = 'utf8';
