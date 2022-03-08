@@ -8,8 +8,6 @@ require_once '../conf/config.php';
  * Classe per gestire la connessione al database
  */
 
-
-
 class Connection
 {
 
@@ -26,13 +24,7 @@ class Connection
     public static function getInstance(): PDO
     {
         if (!isset($pdo)) {
-            /** Variabili definite in config.php
-             * @var string $host
-             * @var string $database
-             * @var string $user
-             * @var string $password
-             */
-            $DSN = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8';
+            $DSN = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHAR;
             $pdo = new PDO($DSN, DB_USER, DB_PASSWORD);
         }
         return $pdo;
