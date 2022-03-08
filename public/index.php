@@ -23,6 +23,10 @@ $container->set('template', function (){
     return new League\Plates\Engine('../templates', 'phtml');
 });
 
+$container->set('connection', function (){
+    return Connection::getInstance();
+});
+
 /**
  * Add Error Middleware
  *
@@ -115,7 +119,7 @@ OEF;
 });
 
 $app->get('/continent', function (Request $request, Response $response, $args){
-   $pdo = Connection::getInstance();
+   $pdo = $this->get('connection');
    $sql = 'SELECT DISTINCT Continent FROM country';
    $stmt = $pdo->query($sql);
    foreach ($stmt as $row)
