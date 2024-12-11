@@ -1,24 +1,46 @@
-# Come creare la prima applicazione in Slim
+# Struttura di applicazioni complesse
 
-Sito di riferimento: [Slim](https://www.slimframework.com/docs/v4/)
+Nelle applicazioni viste finora, la gestione di *cosa fare* in base al differente tipo di richiesta (GET, POST)
+e dei parametri ricevuti, veniva gestita da un unico file, contenente una serie di `if`, ma, anche con poche 
+e semplici funzionalità, tendeva a intricarsi velocemente. 
 
-## Come installare
+Per gestire meglio l'organizzazione di applicazioni di media complessità, senza aver la pretesa di utilizzare
+librerie complete ma anche decisamente più complesse, si vedrà come utilizzare Slim e se ne fornirà
+una proposta di come strutturare applicazioni con accesso a database e con presenza di più funzionalità.
 
-In un mondo ideale senza proxy basta usare Composer.
+## Cos'é Slim
+Il sito di Slim definisce la libreria in questo modo
+
+> Slim is a PHP micro framework that helps you quickly write simple yet powerful web applications and APIs.
+> At its core, Slim is a dispatcher that receives an HTTP request, invokes an appropriate callback routine
+> and returns an HTTP response. That’s it.
+
+Quindi il nocciolo di quello che fa è di ricevere le richieste HTTP, *agganciarle* all'azione appropriata
+e ritornare la corretta risposta HTTP. 
+
+
+
+
+## Come creare la prima applicazione in Slim
+
+Per informazioni più dettagliate si veda il sito di riferimento: [Slim](https://www.slimframework.com/docs/v4/)
+
+### Come installare
+
+Utilizzando Composer[^composer-proxy] bisogna installare nel proprio progetto la libreria `Slim`
+
+[^composer-proxy]: Nei laboratori dove è presente il proxy, è necessario operare con Fiddler come si è fatto in altre occasioni
 
 ```bash
 composer require slim/slim:"4.*"
 ```
 
-Se invece in laboratorio fosse impossibile usarlo per via del proxy farsi passare da chi lavora su un proprio computer il folder *vendor* creato da Composer, come già fatto per Plates.
-
-Successivamente è necessario un altro componente per gestire le richieste sempre con Composer.
+Successivamente è necessario un altro componente per gestire le richieste, che va installato sempre con Composer.
 
 ```bash
 composer require slim/psr7
 ```
 
-Lo stesso discorso fatto prima sul proxy vale anche qua.
 
 A questo punto creare nel progetto una cartella *public* e al suo interno inserire il file *index.php*, che diventerà il front-controller dell'applicazione, cioè ogni richiesta passerà attraverso di lui.
 
