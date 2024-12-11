@@ -50,10 +50,14 @@ $app->get('/altra_pagina', function (Request $request, Response $response, $args
     return $response;
 });
 
-$app->get('/template/{name}', function (Request $request, Response $response, $args) {
+$app->get('/saluti/{name}', function (Request $request, Response $response, $args) {
     $template = $this->get('template');
-    $variabile = [ 'name' => $args['name']];
-    $response->getBody()->write($template->render('esempio', $variabile));
+    $response->getBody()->write($template->render('saluti',
+            [
+                'name' => $args['name']
+            ]
+        )
+    );
     return $response;
 });
 
