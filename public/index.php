@@ -17,10 +17,10 @@ AppFactory::setContainer($container);
 
 $app = AppFactory::create();
 
-$app->setBasePath("/slim");
+$app->setBasePath("/template_slim");
 
 $container->set('template', function (){
-    return new Engine('../templates', 'phtml');
+    return new Engine('../templates', 'tpl');
 });
 
 $container->set('connection', function (){
