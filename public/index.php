@@ -17,7 +17,7 @@ AppFactory::setContainer($container);
 
 $app = AppFactory::create();
 
-$app->setBasePath("/template_slim");
+$app->setBasePath('/template_slim');
 
 $container->set('template', function (){
     return new Engine('../templates', 'tpl');
@@ -46,7 +46,7 @@ $app->get('/', function (Request $request, Response $response, $args) {
 });
 
 $app->get('/altra_pagina', function (Request $request, Response $response, $args) {
-    $response->getBody()->write("Questa è un'altra pagina");
+    $response->getBody()->write('Questa è un\'altra pagina');
     return $response;
 });
 
@@ -58,7 +58,7 @@ $app->get('/template/{name}', function (Request $request, Response $response, $a
 });
 
 $app->get('/ciao/{nome}', function (Request $request, Response $response, $args) {
-    $response->getBody()->write("Ciao" . $args['nome']);
+    $response->getBody()->write('Ciao' . $args['nome']);
     return $response;
 });
 
