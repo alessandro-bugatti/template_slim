@@ -59,7 +59,7 @@ $app = AppFactory::create();
 //Questa parte deve contenere il percorso della
 //sottocartella dove si trova l'applicazione in questo caso inserito nella
 //variabile di configurazione BASE_PATH
-$app->setBasePath(BASE_PATH);
+$app->setBasePath('/template_slim');
 
 $app->get('/', function (Request $request, Response $response, $args) {
     $response->getBody()->write('Hello world!');
@@ -253,7 +253,7 @@ e poi ricostruire i file di autoloading aggiungendo le righe
 all'interno di *composer.json* e chiamando **composer** in questo modo
 
 ```bash
-composer dumpautoload
+composer update
 ```
 in modo che aggiorni i file all'interno della cartella *vendor* per permettere il caricamento 
 della classe *Connection*, che quindi sarà utilizzabile semplicemente aggiungendo
