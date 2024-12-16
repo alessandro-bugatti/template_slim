@@ -3,11 +3,12 @@ use DI\Container as Container;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
-use Util\Connection;
+
+use Controller\ProdottoController;
 
 
 require __DIR__ . '/../vendor/autoload.php';
-
+require_once '../conf/config.php';
 use League\Plates\Engine;
 
 $container = new Container();
@@ -17,14 +18,21 @@ AppFactory::setContainer($container);
 
 $app = AppFactory::create();
 
-$app->setBasePath('/template_slim');
+//Questa parte deve contenere il percorso della
+//sottocartella dove si trova l'applicazione in questo caso inserito nella
+//variabile di configurazione BASE_PATH
+$app->setBasePath(BASE_PATH);
 
 $container->set('template', function (){
-    return new Engine('../templates', 'tpl');
+    $engine = new Engine('../templates', 'tpl');
+    $engine->addData(['base_path' => BASE_PATH]);
+    return $engine;
 });
 
-$container->set('connection', function (){
-    return Connection::getInstance();
+$container->set('prodotto-controller', function (){
+    $engine = new Engine('../templates', 'tpl');
+    $engine->addData(['base_path' => BASE_PATH]);
+    return new ProdottoController($engine);
 });
 
 /**
@@ -39,6 +47,8 @@ $container->set('connection', function (){
  * for middleware added after it.
  */
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
+
+//$app->add($container->get('template')));
 
 $app->get('/', function (Request $request, Response $response, $args) {
     $response->getBody()->write("Hello world!");
@@ -58,6 +68,20 @@ $app->get('/saluti/{name}', function (Request $request, Response $response, $arg
             ]
         )
     );
+    return $response;
+});
+
+$app->get('/negozio', function (Request $request, Response $response, $args) {
+    $controller = $this->get('prodotto-controller');
+    $listaProdotti = $controller->listAll();
+    $response->getBody()->write($listaProdotti);
+    return $response;
+});
+
+$app->get('/negozio/genere/{genere}', function (Request $request, Response $response, $args) {
+    $controller = $this->get('prodotto-controller');
+    $listaProdotti = $controller->listAllByGenre($args['genere']);
+    $response->getBody()->write($listaProdotti);
     return $response;
 });
 
