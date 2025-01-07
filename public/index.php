@@ -7,7 +7,7 @@ use Slim\Factory\AppFactory;
 use Controller\ProdottoController;
 
 
-require __DIR__ . '/../vendor/autoload.php';
+require '../vendor/autoload.php';
 require_once '../conf/config.php';
 use League\Plates\Engine;
 
@@ -55,10 +55,12 @@ $app->get('/', function (Request $request, Response $response, $args) {
     return $response;
 });
 
-$app->get('/altra_pagina', function (Request $request, Response $response, $args) {
-    $response->getBody()->write('Questa è un\'altra pagina');
+$app->get('/hello/{name}', function (Request $request, Response $response, $args) {
+    $name = $args['name'];
+    $response->getBody()->write('Hello ' . $name);
     return $response;
 });
+
 
 $app->get('/saluti/{name}', function (Request $request, Response $response, $args) {
     $template = $this->get('template');
