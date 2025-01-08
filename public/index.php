@@ -40,10 +40,11 @@ $customErrorHandler = function (
     $payload = ['error' => $exception->getMessage()];
 
     $response = $app->getResponseFactory()->createResponse();
+    $engine = $app->getContainer()->get('template');
 
     if ($exception instanceof \Slim\Exception\HttpNotFoundException) {
         $response->getBody()->write(
-            "Pagina non trovata"
+            $engine->render('404', $payload)
         );
     }else{
         $response->getBody()->write(
