@@ -24,7 +24,6 @@ class ProdottoController{
 
     public function listAllByGenre(Request $request, Response $response, array $args): Response{
         $genere = $args['genere'];
-        $prodotti = [];
         if ($genere === 'Uomo')
             $prodotti = ProdottoRepository::listAllMale();
         else if ($genere === 'Donna')
