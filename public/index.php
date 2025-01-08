@@ -35,6 +35,35 @@ $container->set('prodotto-controller', function (){
     return new ProdottoController($engine);
 });
 
+// Define Custom Error Handler
+$customErrorHandler = function (
+    Request $request,
+    Throwable $exception,
+    bool $displayErrorDetails,
+    bool $logErrors,
+    bool $logErrorDetails
+) use ($app) {
+    $payload = ['error' => $exception->getMessage()];
+
+    $response = $app->getResponseFactory()->createResponse();
+
+    if ($exception instanceof \Slim\Exception\HttpNotFoundException) {
+        $response->getBody()->write(
+            "Pagina non trovata"
+        );
+    }else{
+        $response->getBody()->write(
+            "Errore nella pagina"
+        );
+    }
+
+
+    return $response;
+};
+
+
+
+
 /**
  * Add Error Middleware
  *
@@ -46,7 +75,8 @@ $container->set('prodotto-controller', function (){
  * Note: This middleware should be added last. It will not handle any exceptions/errors
  * for middleware added after it.
  */
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+$errorMiddleware = $app->addErrorMiddleware(false, true, true);
+$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
 //$app->add($container->get('template')));
 
