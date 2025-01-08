@@ -24,12 +24,15 @@ class ProdottoController{
 
     public function listAllByGenre(Request $request, Response $response, array $args): Response{
         $genere = $args['genere'];
-        if ($genere === 'All')
-            $prodotti = ProdottoRepository::listAll();
-        else if ($genere === 'Uomo')
+        $prodotti = [];
+        if ($genere === 'Uomo')
             $prodotti = ProdottoRepository::listAllMale();
-        else
+        else if ($genere === 'Donna')
             $prodotti = ProdottoRepository::listAllFemale();
+        else {
+            $prodotti = ProdottoRepository::listAll();
+            $genere = 'All';
+        }
         $engine = $this->container->get('template');
         $response->getBody()->write($engine->render('negozio',
             [
