@@ -55,9 +55,6 @@ $customErrorHandler = function (
     return $response;
 };
 
-
-
-
 /**
  * Add Error Middleware
  *
@@ -70,7 +67,8 @@ $customErrorHandler = function (
  * for middleware added after it.
  */
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-//$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
+if (MY_ERROR_HANDLER)
+    $errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
 //$app->add($container->get('template')));
 
