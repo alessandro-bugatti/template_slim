@@ -16,7 +16,7 @@
 <div class="container grid-lg">
     <header class="navbar">
         <section class="navbar-section">
-            <a href="<?=$base_path?>/negozio" class="navbar-brand mr-2">Tutti i capi</a>
+            <a href="<?=$base_path?>/negozio" class="navbar-brand text-bold mr-2">Tutti i capi</a>
             <a href="<?=$base_path?>/negozio/genere/Uomo" class="btn btn-link">Uomo</a>
             <a href="<?=$base_path?>/negozio/genere/Donna" class="btn btn-link">Donna</a>
         </section>
