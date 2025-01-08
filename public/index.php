@@ -29,12 +29,6 @@ $container->set('template', function (){
     return $engine;
 });
 
-$container->set('prodotto-controller', function (){
-    $engine = new Engine('../templates', 'tpl');
-    $engine->addData(['base_path' => BASE_PATH]);
-    return new ProdottoController($engine);
-});
-
 // Define Custom Error Handler
 $customErrorHandler = function (
     Request $request,
@@ -75,8 +69,8 @@ $customErrorHandler = function (
  * Note: This middleware should be added last. It will not handle any exceptions/errors
  * for middleware added after it.
  */
-$errorMiddleware = $app->addErrorMiddleware(false, true, true);
-$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
+$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+//$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
 //$app->add($container->get('template')));
 
@@ -103,18 +97,8 @@ $app->get('/saluti/{name}', function (Request $request, Response $response, $arg
     return $response;
 });
 
-$app->get('/negozio', function (Request $request, Response $response, $args) {
-    $controller = $this->get('prodotto-controller');
-    $listaProdotti = $controller->listAll();
-    $response->getBody()->write($listaProdotti);
-    return $response;
-});
+$app->get('/negozio',ProdottoController::class . ':listAll');
 
-$app->get('/negozio/genere/{genere}', function (Request $request, Response $response, $args) {
-    $controller = $this->get('prodotto-controller');
-    $listaProdotti = $controller->listAllByGenre($args['genere']);
-    $response->getBody()->write($listaProdotti);
-    return $response;
-});
+$app->get('/negozio/genere/{genere}', ProdottoController::class . ':listAllByGenre');
 
 $app->run();
