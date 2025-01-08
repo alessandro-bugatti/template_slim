@@ -1,4 +1,8 @@
-<?php /**  @var $title */ ?>
+<?php
+/**  @var $title
+ *   @var $base_path
+
+ */ ?>
 
 <html lang="it">
 <head>

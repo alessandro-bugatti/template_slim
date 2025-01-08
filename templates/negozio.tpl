@@ -1,5 +1,7 @@
 <?php
-/** @var $name */
+/** @var $genere
+ * @var $prodotti
+ */
 ?>
 <?php $this->layout('home', ['title' => 'Negozio']) ?>
 
