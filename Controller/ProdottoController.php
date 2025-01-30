@@ -28,10 +28,8 @@ class ProdottoController{
             $prodotti = ProdottoRepository::listAllMale();
         else if ($genere === 'Donna')
             $prodotti = ProdottoRepository::listAllFemale();
-        else {
+        else
             $prodotti = ProdottoRepository::listAll();
-            $genere = 'All';
-        }
         $engine = $this->container->get('template');
         $response->getBody()->write($engine->render('negozio',
             [

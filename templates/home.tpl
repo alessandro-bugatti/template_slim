@@ -3,7 +3,7 @@
  *   @var $base_path
 
  */ ?>
-
+<!doctype html>
 <html lang="it">
 <head>
     <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">

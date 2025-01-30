@@ -14,7 +14,7 @@ use League\Plates\Engine;
 
 $container = new Container();
 
-// Set container to create App with on AppFactory
+// Da inserire prima della create di AppFactory
 AppFactory::setContainer($container);
 
 $app = AppFactory::create();
@@ -52,8 +52,6 @@ $customErrorHandler = function (
             "Errore nella pagina"
         );
     }
-
-
     return $response;
 };
 
