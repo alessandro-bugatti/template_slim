@@ -1,4 +1,6 @@
 <?php
+
+use Controller\AdminController;
 use DI\Container as Container;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -98,5 +100,9 @@ $app->get('/saluti/{name}', function (Request $request, Response $response, $arg
 $app->get('/negozio',ProdottoController::class . ':listAll');
 
 $app->get('/negozio/genere/{genere}', ProdottoController::class . ':listAllByGenre');
+
+$app->get('/admin', AdminController::class . ':listAll');
+
+$app->get('/admin/prodotto', AdminController::class . ':formProdotto');
 
 $app->run();
