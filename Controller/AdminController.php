@@ -21,11 +21,27 @@ class AdminController{
     {
         $engine = $this->container->get('template');
         $prodotti = ProdottoRepository::listAll();
-        $response->getBody()->write($engine->render('adminPanel',
+        $response->getBody()->write($engine->render('pannelloAdmin',
             [
                 'prodotti' => $prodotti
             ]
         ));
         return $response;
     }
+
+    public function formProdotto(Request $request, Response $response, array $args): Response
+    {
+        $engine = $this->container->get('template');
+        $response->getBody()->write($engine->render('formProdotto'));
+        return $response;
+    }
+
+    public function addProdotto(Request $request, Response $response, array $args): Response{
+        $params = (array)$request->getParsedBody();
+        ProdottoRepository::addProdotto($params);
+        $response = $response->withStatus(302);
+        return $response->withHeader('Location', BASE_PATH . '/admin');
+    }
+
+
 }

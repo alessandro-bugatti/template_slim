@@ -32,4 +32,16 @@ class ProdottoRepository{
         );
         return $risposta->fetchAll();
     }
+
+    public static function addProdotto(array $data){
+        $pdo = Connection::getInstance();
+        $risposta = $pdo->prepare('INSERT INTO prodotto (nome, descrizione,prezzo, genere) VALUES (:nome, :descrizione, :prezzo, :genere)');
+        $risposta->execute([
+                'nome' => $data['nome'],
+                'descrizione' => $data['descrizione'],
+                'prezzo' => $data['prezzo'],
+                'genere' => $data['genere']
+                ]
+        );
+    }
 }
