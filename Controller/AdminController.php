@@ -43,5 +43,12 @@ class AdminController{
         return $response->withHeader('Location', BASE_PATH . '/admin');
     }
 
+    public function deleteProdotto(Request $request, Response $response, array $args): Response{
+        $id = $args['id'];
+        ProdottoRepository::deleteProdotto($id);
+        $response = $response->withStatus(302);
+        return $response->withHeader('Location', BASE_PATH . '/admin');
+    }
+
 
 }

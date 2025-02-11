@@ -107,4 +107,7 @@ $app->get('/admin/prodotto', AdminController::class . ':formProdotto');
 
 $app->post('/admin/prodotto', AdminController::class . ':addProdotto');
 
+$app->get('/admin/prodotto/delete/{id}', AdminController::class . ':deleteProdotto');
+
+
 $app->run();
