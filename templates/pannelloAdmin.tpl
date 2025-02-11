@@ -10,8 +10,23 @@
         <a href="<?=$base_path?>/admin/prodotto" class="btn btn-primary">Aggiungi un nuovo prodotto</a>
     </p>
     <h2>Lista dei prodotti</h2>
-    <ul>
-    <?php foreach ($prodotti as $prodotto): ?>
-        <li><?=$prodotto['nome']?>: <i><?=$prodotto['descrizione']?></i></li>
+<table class="table">
+    <thead>
+    <tr>
+        <th>Nome</th>
+        <th>Descrizione</th>
+        <th>Prezzo</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php foreach($prodotti as $prodotto):?>
+        <tr>
+            <td><?=$prodotto['nome']?></td>
+            <td><?=$prodotto['descrizione']?></td>
+            <td><?=$prodotto['prezzo']?></td>
+            <td><a href="<?=$base_path?>/admin/prodotto/delete/<?=$prodotto['id']?>" class="icon icon-delete"></a></td>
+        </tr>
     <?php endforeach;?>
-    </ul>
+    </tbody>
+</table>

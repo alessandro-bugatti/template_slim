@@ -44,4 +44,13 @@ class ProdottoRepository{
                 ]
         );
     }
+
+    public static function deleteProdotto(int $id){
+        $pdo = Connection::getInstance();
+        $risposta = $pdo->prepare('DELETE FROM prodotto WHERE id = :id');
+        $risposta->execute([
+                'id' => $id
+            ]
+        );
+    }
 }
