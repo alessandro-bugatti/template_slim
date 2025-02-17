@@ -32,13 +32,23 @@ class AdminController{
     public function formProdotto(Request $request, Response $response, array $args): Response
     {
         $engine = $this->container->get('template');
-        $response->getBody()->write($engine->render('formProdotto'));
+        $prodotto = null;
+        if ($args != null)
+            $prodotto = ProdottoRepository::getProdotto($args['id']);
+        $response->getBody()->write($engine->render('formProdotto',
+            [
+                'prodotto' => $prodotto
+            ])
+        );
         return $response;
     }
 
     public function addProdotto(Request $request, Response $response, array $args): Response{
         $params = (array)$request->getParsedBody();
-        ProdottoRepository::addProdotto($params);
+        if ($args != null)
+            ProdottoRepository::updateProdotto($args['id'], $params);
+        else
+            ProdottoRepository::addProdotto($params);
         $response = $response->withStatus(302);
         return $response->withHeader('Location', BASE_PATH . '/admin');
     }

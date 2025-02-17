@@ -4,16 +4,16 @@
  */
 ?>
 <?php $this->layout('home', ['title' => 'Negozio']) ?>
-
     <h1>Pannello di amministrazione</h1>
     <h2>Nuovo prodotto</h2>
-<form class="form-horizontal" action="<?=$base_path?>/admin/prodotto" method="post">
+<form class="form-horizontal" action="<?=$base_path?>/admin/prodotto<?=isset($prodotto['id'])?'/'.$prodotto['id']:''?>" method="post">
     <div class="form-group">
         <div class="col-3 col-sm-12">
             <label class="form-label" for="nome">Nome</label>
         </div>
         <div class="col-9 col-sm-12">
-            <input class="form-input" type="text" id="nome" placeholder="Nome" name ="nome" required>
+            <input class="form-input" type="text" id="nome" placeholder="Nome" name ="nome" required
+                   value = "<?=$prodotto['nome']??''?>">
         </div>
     </div>
     <div class="form-group">
@@ -21,7 +21,8 @@
             <label class="form-label" for="descrizione">Descrizione</label>
         </div>
         <div class="col-9 col-sm-12">
-            <input class="form-input" type="text" id="descrizione" placeholder="Descrizione" name="descrizione" required>
+            <input class="form-input" type="text" id="descrizione" placeholder="Descrizione" name="descrizione" required
+            value = "<?=$prodotto['descrizione']??''?>">
         </div>
     </div>
     <div class="form-group">
@@ -29,7 +30,8 @@
             <label class="form-label" for="prezzo">Prezzo</label>
         </div>
         <div class="col-9 col-sm-12">
-            <input class="form-input" type="number" step="0.01" id="prezzo" placeholder="Prezzo" name="prezzo" required>
+            <input class="form-input" type="number" step="0.01" id="prezzo" placeholder="Prezzo" name="prezzo" required
+                   value = "<?=$prodotto['prezzo']??''?>">
         </div>
     </div>
     <div class="form-group">
@@ -38,8 +40,13 @@
         </div>
         <div class="col-9 col-sm-12">
         <select class="form-select" name="genere">
-            <option>Donna</option>
-            <option>Uomo</option>
+            <?php if(!isset($prodotto['genere'])):?>
+                <option>Donna</option>
+                <option>Uomo</option>
+            <?php else: ?>
+                <option <?=($prodotto['genere'] == 'Donna')?'selected':''?> >Donna</option>
+                <option <?=($prodotto['genere'] == 'Uomo')?'selected':''?> >Uomo</option>
+            <?php endif; ?>
         </select>
         </div>
     </div>

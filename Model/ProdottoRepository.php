@@ -45,6 +45,19 @@ class ProdottoRepository{
         );
     }
 
+    public static function updateProdotto(int $id, array $data){
+        $pdo = Connection::getInstance();
+        $risposta = $pdo->prepare('UPDATE prodotto SET nome = :nome, descrizione = :descrizione, prezzo = :prezzo, genere = :genere WHERE id = :id');
+        $risposta->execute([
+                'id' => $id,
+                'nome' => $data['nome'],
+                'descrizione' => $data['descrizione'],
+                'prezzo' => $data['prezzo'],
+                'genere' => $data['genere']
+            ]
+        );
+    }
+
     public static function deleteProdotto(int $id){
         $pdo = Connection::getInstance();
         $risposta = $pdo->prepare('DELETE FROM prodotto WHERE id = :id');
@@ -53,4 +66,15 @@ class ProdottoRepository{
             ]
         );
     }
+
+    public static function getProdotto(int $id)
+    {
+        $pdo = Connection::getInstance();
+        $risposta = $pdo->prepare('SELECT * FROM prodotto WHERE id = :id');
+        $risposta->execute([
+            'id' => $id
+        ]);
+        return $risposta->fetch();
+    }
+
 }

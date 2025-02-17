@@ -103,11 +103,12 @@ $app->get('/negozio/genere/{genere}', ProdottoController::class . ':listAllByGen
 
 $app->get('/admin', AdminController::class . ':listAll');
 
-$app->get('/admin/prodotto', AdminController::class . ':formProdotto');
+$app->get('/admin/prodotto[/{id}]', AdminController::class . ':formProdotto');
 
-$app->post('/admin/prodotto', AdminController::class . ':addProdotto');
+$app->post('/admin/prodotto[/{id}]', AdminController::class . ':addProdotto');
 
-$app->get('/admin/prodotto/delete/{id}', AdminController::class . ':deleteProdotto');
+$app->get('/admin/prodotto/{id}/delete', AdminController::class . ':deleteProdotto');
+
 
 
 $app->run();

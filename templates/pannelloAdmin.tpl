@@ -17,6 +17,7 @@
         <th>Descrizione</th>
         <th>Prezzo</th>
         <th></th>
+        <th></th>
     </tr>
     </thead>
     <tbody>
@@ -25,7 +26,8 @@
             <td><?=$prodotto['nome']?></td>
             <td><?=$prodotto['descrizione']?></td>
             <td><?=$prodotto['prezzo']?></td>
-            <td><a href="<?=$base_path?>/admin/prodotto/delete/<?=$prodotto['id']?>" class="icon icon-delete"></a></td>
+            <td><a href="<?=$base_path?>/admin/prodotto/<?=$prodotto['id']?>" class="icon icon-edit"></a></td>
+            <td><a href="<?=$base_path?>/admin/prodotto/<?=$prodotto['id']?>/delete" class="icon icon-delete"></a></td>
         </tr>
     <?php endforeach;?>
     </tbody>
