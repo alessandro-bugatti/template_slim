@@ -46,19 +46,17 @@ class AdminController{
     public function addProdotto(Request $request, Response $response, array $args): Response{
         $params = (array)$request->getParsedBody();
         if ($args != null)
-            ProdottoRepository::updateProdotto($args['id'], $params);
+            ProdottoRepository::update($args['id'], $params);
         else
-            ProdottoRepository::addProdotto($params);
+            ProdottoRepository::add($params);
         $response = $response->withStatus(302);
         return $response->withHeader('Location', BASE_PATH . '/admin');
     }
 
     public function deleteProdotto(Request $request, Response $response, array $args): Response{
         $id = $args['id'];
-        ProdottoRepository::deleteProdotto($id);
+        ProdottoRepository::delete($id);
         $response = $response->withStatus(302);
         return $response->withHeader('Location', BASE_PATH . '/admin');
     }
-
-
 }

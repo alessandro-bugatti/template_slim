@@ -33,7 +33,7 @@ class ProdottoRepository{
         return $risposta->fetchAll();
     }
 
-    public static function addProdotto(array $data){
+    public static function add(array $data){
         $pdo = Connection::getInstance();
         $risposta = $pdo->prepare('INSERT INTO prodotto (nome, descrizione,prezzo, genere) VALUES (:nome, :descrizione, :prezzo, :genere)');
         $risposta->execute([
@@ -45,7 +45,7 @@ class ProdottoRepository{
         );
     }
 
-    public static function updateProdotto(int $id, array $data){
+    public static function update(int $id, array $data){
         $pdo = Connection::getInstance();
         $risposta = $pdo->prepare('UPDATE prodotto SET nome = :nome, descrizione = :descrizione, prezzo = :prezzo, genere = :genere WHERE id = :id');
         $risposta->execute([
@@ -58,7 +58,7 @@ class ProdottoRepository{
         );
     }
 
-    public static function deleteProdotto(int $id){
+    public static function delete(int $id){
         $pdo = Connection::getInstance();
         $risposta = $pdo->prepare('DELETE FROM prodotto WHERE id = :id');
         $risposta->execute([
