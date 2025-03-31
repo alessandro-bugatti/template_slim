@@ -6,7 +6,8 @@
 <?php $this->layout('home', ['title' => 'Negozio']) ?>
     <h1>Pannello di amministrazione</h1>
     <h2>Nuovo prodotto</h2>
-<form class="form-horizontal" action="<?=$base_path?>/admin/prodotto<?=isset($prodotto['id'])?'/'.$prodotto['id']:''?>" method="post">
+<form enctype="multipart/form-data" class="form-horizontal" action="<?=$base_path?>/admin/prodotto<?=isset($prodotto['id'])?'/'.$prodotto['id']:''?>" method="post">
+    <input type="hidden" name="MAX_FILE_SIZE" value="1000000" />
     <div class="form-group">
         <div class="col-3 col-sm-12">
             <label class="form-label" for="nome">Nome</label>
@@ -49,6 +50,16 @@
             <?php endif; ?>
         </select>
         </div>
+    </div>
+    <div class="form-group">
+        <div class="col-3 col-sm-12">
+            <label class="form-label" for="immagine"></label>
+        </div>
+        <div class="col-9 col-sm-12">
+            <input class="form-input" type="file"
+                   id="immagine" name="immagine">
+        </div>
+
     </div>
     <div class="form-group">
         <div class="col-2 col-ml-auto">
