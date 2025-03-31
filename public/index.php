@@ -111,6 +111,6 @@ $app->post('/admin/prodotto[/{id}]', AdminController::class . ':addProdotto');
 
 $app->get('/admin/prodotto/{id}/delete', AdminController::class . ':deleteProdotto');
 
-
+$app->get('/negozio/prodotto[/{id}]', ProdottoController::class . ':showProdotto');
 
 $app->run();
