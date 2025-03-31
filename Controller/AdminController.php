@@ -43,12 +43,23 @@ class AdminController{
         return $response;
     }
 
-    public function addProdotto(Request $request, Response $response, array $args): Response{
+    public function addProdotto(Request $request, Response $response, array $args): ?Response{
         $params = (array)$request->getParsedBody();
-        if ($args != null)
-            ProdottoRepository::update($args['id'], $params);
-        else
-            ProdottoRepository::add($params);
+
+        $directory = $this->container->get('images');
+        $uploadedFiles = $request->getUploadedFiles();
+        $uploadedFile = $uploadedFiles['immagine'];
+        $name = sha1($uploadedFile->getClientFilename() . rand()) . '.jpg';
+        //Viene aggiunto il nome dell'immagine per poterla memorizzare nel DB
+        $params['image'] = $name;
+        $filename = '../' . $directory . '/' . $name;
+        if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
+            $uploadedFile->moveTo($filename);
+            if ($args != null)
+                ProdottoRepository::update($args['id'], $params);
+            else
+                ProdottoRepository::add($params);
+        }
         $response = $response->withStatus(302);
         return $response->withHeader('Location', BASE_PATH . '/admin');
     }
