@@ -32,6 +32,8 @@ $container->set('template', function (){
     return $engine;
 });
 
+$container->set('images', IMAGES);
+
 // Define Custom Error Handler
 $customErrorHandler = function (
     Request $request,
