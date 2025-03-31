@@ -7,7 +7,8 @@ use Psr\Container\ContainerInterface;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
-class ProdottoController{
+class ProdottoController
+{
 
     private $container;
 
@@ -19,10 +20,11 @@ class ProdottoController{
 
     public function listAll(Request $request, Response $response, array $args): Response
     {
-        return $this->listAllByGenre($request, $response,['genere' => 'All']);
+        return $this->listAllByGenre($request, $response, ['genere' => 'All']);
     }
 
-    public function listAllByGenre(Request $request, Response $response, array $args): Response{
+    public function listAllByGenre(Request $request, Response $response, array $args): Response
+    {
         $genere = $args['genere'];
         if ($genere === 'Uomo')
             $prodotti = ProdottoRepository::listAllMale();
@@ -39,4 +41,18 @@ class ProdottoController{
         ));
         return $response;
     }
+
+    public function showProdotto(Request $request, Response $response, array $args): Response
+    {
+        $engine = $this->container->get('template');
+        $prodotto = ProdottoRepository::getProdotto($args['id']);
+        $response->getBody()->write($engine->render('prodotto',
+            [
+                'prodotto' => $prodotto,
+
+            ]
+        ));
+        return $response;
+    }
+
 }
