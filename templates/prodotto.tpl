@@ -1,6 +1,7 @@
 <?php
 /**
  * @var $prodotto
+ * @var $base_path
  */
 ?>
 <?php $this->layout('home', ['title' => 'Negozio']) ?>
