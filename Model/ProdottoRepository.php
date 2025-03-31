@@ -35,25 +35,27 @@ class ProdottoRepository{
 
     public static function add(array $data){
         $pdo = Connection::getInstance();
-        $risposta = $pdo->prepare('INSERT INTO prodotto (nome, descrizione,prezzo, genere) VALUES (:nome, :descrizione, :prezzo, :genere)');
+        $risposta = $pdo->prepare('INSERT INTO prodotto (nome, descrizione,prezzo, genere, image) VALUES (:nome, :descrizione, :prezzo, :genere, :image)');
         $risposta->execute([
                 'nome' => $data['nome'],
                 'descrizione' => $data['descrizione'],
                 'prezzo' => $data['prezzo'],
-                'genere' => $data['genere']
+                'genere' => $data['genere'],
+                'image' => $data['image']
                 ]
         );
     }
 
     public static function update(int $id, array $data){
         $pdo = Connection::getInstance();
-        $risposta = $pdo->prepare('UPDATE prodotto SET nome = :nome, descrizione = :descrizione, prezzo = :prezzo, genere = :genere WHERE id = :id');
+        $risposta = $pdo->prepare('UPDATE prodotto SET nome = :nome, descrizione = :descrizione, prezzo = :prezzo, genere = :genere, image = :image WHERE id = :id');
         $risposta->execute([
                 'id' => $id,
                 'nome' => $data['nome'],
                 'descrizione' => $data['descrizione'],
                 'prezzo' => $data['prezzo'],
-                'genere' => $data['genere']
+                'genere' => $data['genere'],
+                'image' => $data['image']
             ]
         );
     }
