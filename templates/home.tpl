@@ -1,7 +1,7 @@
 <?php
 /**  @var $title
  *   @var $base_path
-
+ *   @var $user
  */ ?>
 <!doctype html>
 <html lang="it">
@@ -19,6 +19,13 @@
             <a href="<?=$base_path?>/negozio" class="navbar-brand text-bold mr-2">Tutti i capi</a>
             <a href="<?=$base_path?>/negozio/genere/Uomo" class="btn btn-link">Uomo</a>
             <a href="<?=$base_path?>/negozio/genere/Donna" class="btn btn-link">Donna</a>
+            <?php if ($user !== null):?>
+                <a href="<?=$base_path?>/logout" class="btn btn-link">Logout</a>
+            <?php else:?>
+                <a href="<?=$base_path?>/login" class="btn btn-link">Login</a>
+            <?php endif;?>
+            <a href="<?=$base_path?>/admin" class="btn btn-link">Vai alla pagina di amministrazione</a>
+
         </section>
         <!--<section class="navbar-section">
             <div class="input-group input-inline">
