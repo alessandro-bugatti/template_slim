@@ -5,7 +5,9 @@ use DI\Container as Container;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
+use Slim\Exception\HttpUnauthorizedException;
 use Slim\Factory\AppFactory;
+
 
 use Controller\ProdottoController;
 
@@ -13,6 +15,8 @@ use Controller\ProdottoController;
 require '../vendor/autoload.php';
 require_once '../conf/config.php';
 use League\Plates\Engine;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Util\Authenticator;
 
 $container = new Container();
 
@@ -29,10 +33,48 @@ $app->setBasePath(BASE_PATH);
 $container->set('template', function (){
     $engine = new Engine('../templates', 'tpl');
     $engine->addData(['base_path' => BASE_PATH]);
+    $user = Authenticator::getUser();
+    $username = isset($user['username']) ? $user['username'] : null;
+    $engine->addData(['user' => $username]);
     return $engine;
 });
 
 $container->set('images', IMAGES);
+
+//Gestione del middleware di autenticazione
+
+$authMiddleware = function(Request $request, RequestHandler $handler) use ($app): Response {
+
+    $routeName = $request->getUri()->getPath();
+
+    // Route della parte pubblica
+    $publicRoute = BASE_PATH . '/negozio';
+
+    //Se è una route pubblica non fa nulla
+    if (str_starts_with($routeName, $publicRoute)) {
+        return $handler->handle($request);
+    }
+
+    $user = Authenticator::getUser();
+
+    if ($routeName === BASE_PATH . '/login') {
+        return $handler->handle($request);
+    }
+    if ($user !== null) {
+        //Vengono "agganciate" le informazioni sul nome
+        $request = $request->withAttribute('user', $user);
+        return $handler->handle($request);
+    }
+    else{
+        throw new HttpUnauthorizedException($request);
+    }
+
+};
+
+$app->add($authMiddleware);
+
+$app->addRoutingMiddleware();
+
 
 // Define Custom Error Handler
 $customErrorHandler = function (
@@ -51,9 +93,9 @@ $customErrorHandler = function (
         $response->getBody()->write(
             $engine->render('404', $payload)
         );
-    }else{
+    }else if($exception instanceof HttpUnauthorizedException){
         $response->getBody()->write(
-            "Errore nella pagina"
+            "Utente non loggato"
         );
     }
     return $response;
@@ -74,7 +116,9 @@ $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 if (MY_ERROR_HANDLER)
     $errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
-//$app->add($container->get('template')));
+
+
+//Esempi di route
 
 $app->get('/', function (Request $request, Response $response, $args) {
     $response->getBody()->write("Hello world!");
@@ -112,5 +156,14 @@ $app->post('/admin/prodotto[/{id}]', AdminController::class . ':addProdotto');
 $app->get('/admin/prodotto/{id}/delete', AdminController::class . ':deleteProdotto');
 
 $app->get('/negozio/prodotto[/{id}]', ProdottoController::class . ':showProdotto');
+
+//Parte per l'autenticazione
+
+$app->get('/login', AdminController::class . ':login');
+
+$app->post('/auth', AdminController::class . ':listAll');
+
+$app->get('/logout', AdminController::class . ':logout');
+
 
 $app->run();
