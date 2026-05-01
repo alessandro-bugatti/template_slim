@@ -1,15 +1,17 @@
 <?php
-/** @var $base_path
- * @var $error
- */
+/** @var $error */
 ?>
-<?php $this->layout('home', ['title' => 'Negozio']) ?>
+<?php $this->layout('home', ['title' => 'Pagina non trovata']) ?>
 
-    <h1>Oops, qualcosa è andato storto :-/</h1>
+<article>
+    <header>
+        <h1>Oops, qualcosa è andato storto :-/</h1>
+        <p>La pagina richiesta non è disponibile.</p>
+    </header>
 
-    <div class="columns">
-        <div class="col-4 col-mx-auto"><img src="<?=$base_path?>/assets/404.png" class="img-responsive" alt="404 not found">
-        </div>
-    </div>
-<!--<div class="code">Errore: <?=$error?></div>-->
+    <p>
+        <img src="/assets/404.png" alt="Illustrazione di errore 404">
+    </p>
+</article>
+<!--<p>Errore: <?=$error?></p>-->
 

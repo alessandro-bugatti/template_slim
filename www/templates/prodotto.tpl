@@ -1,27 +1,22 @@
 <?php
-/**
- * @var $prodotto
- * @var $base_path
- */
+/** @var $prodotto */
 ?>
-<?php $this->layout('home', ['title' => 'Negozio']) ?>
+<?php $this->layout('home', ['title' => $prodotto['nome'] ?? 'Negozio']) ?>
 
-    <h1>Esempio negozio con pattern MVC</h1>
-    <h2><?=$prodotto['nome']?></h2>
+<article>
+    <header>
+        <h1>Esempio negozio con pattern MVC</h1>
+        <h2><?=$prodotto['nome']?></h2>
+        <p><strong>Prezzo:</strong> <?=$prodotto['prezzo']?> €</p>
+    </header>
 
-<div class="card">
-    <div class="card-image">
-        <img src="/images/<?=$prodotto['image']?>"
-             class="img-responsive" alt="<?=$prodotto['nome']?>">
-    </div>
-    <div class="card-header">
-        <div class="card-title h5"><?=$prodotto['nome']?></div>
-        <div class="card-subtitle text-gray"><?=$prodotto['prezzo']?> €</div>
-    </div>
-    <div class="card-body">
-        <?=$prodotto['descrizione']?>
-    </div>
-    <div class="card-footer">
+    <p>
+        <img src="/images/<?=$prodotto['image']?>" alt="<?=$prodotto['nome']?>">
+    </p>
+
+    <p><?=$prodotto['descrizione']?></p>
+
+    <footer>
         <a href="/negozio">Torna al negozio</a>
-    </div>
-</div>
+    </footer>
+</article>

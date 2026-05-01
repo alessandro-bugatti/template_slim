@@ -1,21 +1,25 @@
-<?php $this->layout('home', ['titolo' => 'Esempio CRUD - login']) ?>
+<?php $this->layout('home', ['title' => 'Login']) ?>
 
-<h1>Login</h1>
-<?php if(isset($login_fallito)):?>
-    <div class="toast toast-error">
-        Credenziali non corrette, riprova.
-    </div>
-<?php endif; ?>
-<form class="form" action="auth" method="post">
-    <div class="form-group">
-        <label class="form-label" for="username">Username</label>
-        <input class="form-input" type="text" id="username" placeholder="Username" name="username">
-    </div>
-    <div class="form-group">
-        <label class="form-label" for="password">Password</label>
-        <input class="form-input" type="password" id="password" placeholder="Password" name="password">
-    </div>
-    <div class="float-right">
-        <input class="btn btn-primary" type="submit" value="Invia credenziali">
-    </div>
-</form>
+<article>
+    <header>
+        <h1>Login</h1>
+    </header>
+
+    <?php if (isset($login_fallito)):?>
+        <p><strong>Credenziali non corrette, riprova.</strong></p>
+    <?php endif; ?>
+
+    <form action="/auth" method="post">
+        <label for="username">
+            Username
+            <input type="text" id="username" placeholder="Username" name="username" required>
+        </label>
+
+        <label for="password">
+            Password
+            <input type="password" id="password" placeholder="Password" name="password" required>
+        </label>
+
+        <button type="submit">Invia credenziali</button>
+    </form>
+</article>

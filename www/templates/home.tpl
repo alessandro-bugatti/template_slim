@@ -1,42 +1,62 @@
 <?php
 /**  @var $title
- *   @var $base_path
  *   @var $user
  */ ?>
 <!doctype html>
 <html lang="it">
 <head>
-    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
-    <title><?=$this->e($title)?></title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css">
+    <title><?=$this->e($title ?? 'Negozio')?></title>
+    <style>
+        body > header,
+        body > main {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem;
+        }
+
+        nav ul:last-child li,
+        table td:last-child,
+        table td:nth-last-child(2),
+        table th:last-child,
+        table th:nth-last-child(2) {
+            white-space: nowrap;
+        }
+
+        article img {
+            width: 100%;
+            height: auto;
+        }
+
+        form button[type="submit"],
+        form input[type="submit"] {
+            margin-bottom: 0;
+        }
+    </style>
 </head>
 <body>
-
-<div class="container grid-lg">
-    <header class="navbar">
-        <section class="navbar-section">
-            <a href="/negozio" class="navbar-brand text-bold mr-2">Tutti i capi</a>
-            <a href="/negozio/genere/Uomo" class="btn btn-link">Uomo</a>
-            <a href="/negozio/genere/Donna" class="btn btn-link">Donna</a>
+<header>
+    <nav>
+        <ul>
+            <li><strong>Negozio</strong></li>
+        </ul>
+        <ul>
+            <li><a href="/negozio">Tutti i capi</a></li>
+            <li><a href="/negozio/genere/Uomo">Uomo</a></li>
+            <li><a href="/negozio/genere/Donna">Donna</a></li>
             <?php if ($user !== null):?>
-                <a href="/logout" class="btn btn-link">Logout</a>
+                <li><a href="/logout">Logout</a></li>
             <?php else:?>
-                <a href="/login" class="btn btn-link">Login</a>
+                <li><a href="/login">Login</a></li>
             <?php endif;?>
-            <a href="/admin" class="btn btn-link">Vai alla pagina di amministrazione</a>
-
-        </section>
-        <!--<section class="navbar-section">
-            <div class="input-group input-inline">
-                <input class="form-input" type="text" placeholder="search">
-                <button class="btn btn-primary input-group-btn">Search</button>
-            </div>
-        </section>-->
-    </header>
-<!--Questa parte sarà sempre così e serve a includere
-il template che contiene il contenuto vero e proprio-->
-<?=$this->section('content')?>
-</div>
+            <li><a href="/admin">Amministrazione</a></li>
+        </ul>
+    </nav>
+</header>
+<main>
+    <?=$this->section('content')?>
+</main>
 </body>
 </html>
