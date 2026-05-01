@@ -55,8 +55,7 @@ class AdminController{
         else {
             $uploadedFile = $uploadedFiles['immagine'];
             $name = sha1($uploadedFile->getClientFilename() . rand()) . '.jpg';
-            $filename = '/images/' . $name;
-            var_dump($filename);
+            $filename = './images/' . $name;
             $uploadedFile->moveTo($filename);
         }
         //Viene aggiunto il nome dell'immagine per poterla memorizzare nel DB
