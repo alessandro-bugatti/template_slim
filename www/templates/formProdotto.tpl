@@ -1,5 +1,7 @@
 <?php
-/** @var $prodotto */
+/** @var $prodotto
+ * @var $upload_max_file_size
+ */
 ?>
 <?php $this->layout('home', ['title' => 'Gestione prodotto']) ?>
 
@@ -10,7 +12,7 @@
     </header>
 
     <form enctype="multipart/form-data" action="/admin/prodotto<?=isset($prodotto['id']) ? '/'.$prodotto['id'] : ''?>" method="post">
-        <input type="hidden" name="MAX_FILE_SIZE" value="1000000">
+        <input type="hidden" name="MAX_FILE_SIZE" value="<?=$upload_max_file_size?>">
 
         <label for="nome">
             Nome

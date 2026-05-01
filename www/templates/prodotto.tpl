@@ -1,5 +1,7 @@
 <?php
-/** @var $prodotto */
+/** @var $prodotto
+ * @var $images_base_url
+ */
 ?>
 <?php $this->layout('home', ['title' => $prodotto['nome'] ?? 'Negozio']) ?>
 
@@ -11,7 +13,7 @@
     </header>
 
     <p>
-        <img src="/images/<?=$prodotto['image']?>" alt="<?=$prodotto['nome']?>">
+        <img src="<?=$images_base_url?>/<?=$prodotto['image']?>" alt="<?=$prodotto['nome']?>">
     </p>
 
     <p><?=$prodotto['descrizione']?></p>

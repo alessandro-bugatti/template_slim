@@ -1,5 +1,7 @@
 <?php
-/** @var $error */
+/** @var $error
+ * @var $assets_base_url
+ */
 ?>
 <?php $this->layout('home', ['title' => 'Pagina non trovata']) ?>
 
@@ -10,7 +12,7 @@
     </header>
 
     <p>
-        <img src="/assets/404.png" alt="Illustrazione di errore 404">
+        <img src="<?=$assets_base_url?>/404.png" alt="Illustrazione di errore 404">
     </p>
 </article>
 <!--<p>Errore: <?=$error?></p>-->

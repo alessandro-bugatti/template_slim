@@ -26,10 +26,15 @@ AppFactory::setContainer($container);
 $app = AppFactory::create();
 
 $container->set('template', function (){
-    $engine = new Engine('templates', 'tpl');
+    $engine = new Engine(TEMPLATE_DIR, 'tpl');
     $user = Authenticator::getUser();
     $username = isset($user['username']) ? $user['username'] : null;
-    $engine->addData(['user' => $username]);
+    $engine->addData([
+        'user' => $username,
+        'images_base_url' => IMAGES_BASE_URL,
+        'assets_base_url' => ASSETS_BASE_URL,
+        'upload_max_file_size' => UPLOAD_MAX_FILE_SIZE,
+    ]);
     return $engine;
 });
 
@@ -107,8 +112,8 @@ $customErrorHandler = function (
  * Note: This middleware should be added last. It will not handle any exceptions/errors
  * for middleware added after it.
  */
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
-if (MY_ERROR_HANDLER)
+$errorMiddleware = $app->addErrorMiddleware(APP_DEBUG, true, true);
+if (APP_USE_CUSTOM_ERROR_HANDLER)
     $errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
 

@@ -56,11 +56,6 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $app = AppFactory::create();
 
-//Questa parte deve contenere il percorso della
-//sottocartella dove si trova l'applicazione in questo caso inserito nella
-//variabile di configurazione BASE_PATH
-$app->setBasePath('/template_slim');
-
 $app->get('/', function (Request $request, Response $response, $args) {
     $response->getBody()->write('Hello world!');
     return $response;
@@ -81,14 +76,7 @@ Le parti più importanti di questo codice sono:
 4. Nel corpo della funzione avviene la scrittura del body della risposta, utilizzando il metodo `write` applicato appunto al body e scrivendo quello che si vuole sia contenuto nella pagina di risposta (**attenzione**: il body della risposta è quello relativo al protocollo HTTP, non ha nulla a che vedere con il body della pagina HTML, hanno solo lo stesso nome).
 
 
-**Attenzione**: il parametro nella chiamata al metodo ```setBasePath``` deve rispecchiare l'esatta struttura delle cartelle dove si trova l'applicazione. In questo esempio il metodo viene chiamato in questo modo
-```php
-$app->setBasePath("/template_slim");
-```
-perché l'applicazione si trova nella sottocartella *template_slim* all'interno della root del web server. Se ad esempio la cartella si trovasse nella cartella *~piero/negozio* allora l'istruzione andrebbe riscritta come
-```php
-$app->setBasePath("/~piero/negozio");
-```
+In questa versione dell'esempio non viene usato un prefisso applicativo: l'applicazione espone le rotte direttamente dalla root del sito e nei template i link vengono scritti in modo root-relative, ad esempio `/negozio`, `/admin` o `/login`.
 
 ## Configurare Apache per l'URL rewriting
 
@@ -178,9 +166,7 @@ di Plates verrà fatto in questo modo
 
 ```php
 $container->set('template', function (){
-    $engine = new Engine('../templates', 'tpl');
-    $engine->addData(['base_path' => BASE_PATH]);
-    return $engine;
+    return new Engine('templates', 'tpl');
 });
 ```
 dove il primo parametro è la chiave per recuperare il servizio e il secondo è la funzione anonima
@@ -188,10 +174,8 @@ che ritorna il servizio, occupandosi della sua creazione.
 
 **Attenzione**: il primo parametro del costruttore dell'Engine deve come al solito contenere la cartella
 dove poi verranno inseriti i vari template, ma il percorso deve essere relativo al file dove si trovano
-queste istruzioni: nel nostro caso in cui il file ```index.php``` si trova nella cartella **public** il nome della cartella deve essere preceduto da ```../```. 
-Inoltre viene usato anche il metodo `add` per aggiungere una variabile, in questo caso
-`base_path`, in modo che sia visibile al template. Questa variabile è necessaria per poter
-generare dei link corretti all'interno dei template e contiene 
+queste istruzioni: nel progetto attuale il file `index.php` si trova direttamente nella cartella `www`, quindi è sufficiente indicare `templates`.
+Non è necessario aggiungere ai template una variabile dedicata ai percorsi, perché i link possono essere scritti direttamente in forma root-relative, ad esempio `/negozio` o `/admin`.
 
 Una volta aggiunto Plates nel container, per poterlo utilizzare basterà aggiungere del codice come il
 seguente nelle callback per le rotte su cui vogliamo usare dei template.
@@ -371,9 +355,9 @@ In questo esempio il template, `negozio.tpl`, avrà una struttura di questo tipo
 </head>
 <body>
     <h1>Esempio negozio con pattern MVC</h1>
-    <p><a href="<?=$base_path?>/negozio/genere/All">Tutti i capi</a></p>
-    <p><a href="<?=$base_path?>/negozio/genere/Donna">Abbigliamento femminile</a></p>
-    <p><a href="<?=$base_path?>/negozio/genere/Uomo">Abbigliamento maschile</a></p>
+    <p><a href="/negozio">Tutti i capi</a></p>
+    <p><a href="/negozio/genere/Donna">Abbigliamento femminile</a></p>
+    <p><a href="/negozio/genere/Uomo">Abbigliamento maschile</a></p>
     <h2>Lista dei prodotti: <?=$genere?></h2>
     <ul>
         <?php foreach ($prodotti as $prodotto): ?>
