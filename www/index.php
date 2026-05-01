@@ -12,8 +12,8 @@ use Slim\Factory\AppFactory;
 use Controller\ProdottoController;
 
 
-require '../vendor/autoload.php';
-require_once '../conf/config.php';
+require 'vendor/autoload.php';
+require_once 'conf/config.php';
 use League\Plates\Engine;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Util\Authenticator;
@@ -31,7 +31,7 @@ $app = AppFactory::create();
 $app->setBasePath(BASE_PATH);
 
 $container->set('template', function (){
-    $engine = new Engine('../templates', 'tpl');
+    $engine = new Engine('templates', 'tpl');
     $engine->addData(['base_path' => BASE_PATH]);
     $user = Authenticator::getUser();
     $username = isset($user['username']) ? $user['username'] : null;
