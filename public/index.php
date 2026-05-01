@@ -55,11 +55,14 @@ $authMiddleware = function(Request $request, RequestHandler $handler) use ($app)
         return $handler->handle($request);
     }
 
-    $user = Authenticator::getUser();
-
+    //La route di login deve passare
     if ($routeName === BASE_PATH . '/login') {
         return $handler->handle($request);
     }
+
+    $user = Authenticator::getUser();
+
+
     if ($user !== null) {
         //Vengono "agganciate" le informazioni sul nome
         $request = $request->withAttribute('user', $user);
