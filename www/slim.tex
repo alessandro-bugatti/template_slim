@@ -1,0 +1,655 @@
+\hypertarget{struttura-di-applicazioni-complesse}{%
+\section{Struttura di applicazioni
+complesse}\label{struttura-di-applicazioni-complesse}}
+
+Nelle applicazioni viste finora, la gestione di \emph{cosa fare} in base
+al differente tipo di richiesta (GET, POST) e dei parametri ricevuti,
+veniva gestita da un unico file, contenente una serie di \texttt{if},
+ma, anche con poche e semplici funzionalità, tendeva a intricarsi
+velocemente.
+
+Per gestire meglio l'organizzazione di applicazioni di media
+complessità, senza aver la pretesa di utilizzare librerie complete ma
+anche decisamente più complesse, si vedrà come utilizzare Slim e se ne
+fornirà una proposta di come strutturare applicazioni con accesso a
+database e con presenza di più funzionalità.
+
+\hypertarget{cosuxe9-slim}{%
+\subsection{Cos'é Slim}\label{cosuxe9-slim}}
+
+Il sito di Slim definisce la libreria in questo modo
+
+\begin{quote}
+Slim is a PHP micro framework that helps you quickly write simple yet
+powerful web applications and APIs. At its core, Slim is a dispatcher
+that receives an HTTP request, invokes an appropriate callback routine
+and returns an HTTP response. That's it.
+\end{quote}
+
+Quindi il nocciolo di quello che fa è di ricevere le richieste HTTP,
+\emph{agganciarle} all'azione appropriata e ritornare la corretta
+risposta HTTP.
+
+\hypertarget{come-creare-la-prima-applicazione-in-slim}{%
+\subsection{Come creare la prima applicazione in
+Slim}\label{come-creare-la-prima-applicazione-in-slim}}
+
+Per informazioni più dettagliate si veda il sito di riferimento:
+\href{https://www.slimframework.com/docs/v4/}{Slim}
+
+\hypertarget{come-installare}{%
+\subsubsection{Come installare}\label{come-installare}}
+
+Utilizzando Composer\footnote{Nei laboratori dove è presente il proxy, è
+  necessario operare con Fiddler come si è fatto in altre occasioni}
+bisogna installare nel proprio progetto la libreria \texttt{Slim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ExtensionTok{composer}\NormalTok{ require slim/slim:}\StringTok{"4.*"}
+\end{Highlighting}
+\end{Shaded}
+
+Successivamente è necessario un altro componente per gestire le
+richieste, che va installato sempre con Composer.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ExtensionTok{composer}\NormalTok{ require slim/psr7}
+\end{Highlighting}
+\end{Shaded}
+
+A questo punto creare nel progetto una cartella \emph{public} e al suo
+interno inserire il file \emph{index.php}, che diventerà il
+front-controller dell'applicazione, cioè ogni richiesta passerà
+attraverso di lui.
+
+Il contenuto di questo file può essere popolato in questo modo
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{\textless{}?php}
+\KeywordTok{use} \ConstantTok{P}\NormalTok{sr\textbackslash{}}\ConstantTok{H}\NormalTok{ttp\textbackslash{}}\ConstantTok{M}\NormalTok{essage\textbackslash{}}\ConstantTok{R}\NormalTok{esponseInterface }\KeywordTok{as} \ConstantTok{R}\NormalTok{esponse}\OtherTok{;}
+\KeywordTok{use} \ConstantTok{P}\NormalTok{sr\textbackslash{}}\ConstantTok{H}\NormalTok{ttp\textbackslash{}}\ConstantTok{M}\NormalTok{essage\textbackslash{}}\ConstantTok{S}\NormalTok{erverRequestInterface }\KeywordTok{as} \ConstantTok{R}\NormalTok{equest}\OtherTok{;}
+\KeywordTok{use} \ConstantTok{S}\NormalTok{lim\textbackslash{}}\ConstantTok{F}\NormalTok{actory\textbackslash{}}\ConstantTok{A}\NormalTok{ppFactory}\OtherTok{;}
+
+\KeywordTok{require} \ConstantTok{\_\_DIR\_\_} \OperatorTok{.} \StringTok{\textquotesingle{}/../vendor/autoload.php\textquotesingle{}}\OtherTok{;}
+
+\VariableTok{$app} \OperatorTok{=} \ConstantTok{A}\NormalTok{ppFactory::create()}\OtherTok{;}
+
+\CommentTok{//Questa parte deve contenere il percorso della}
+\CommentTok{//sottocartella dove si trova l\textquotesingle{}applicazione in questo caso inserito nella}
+\CommentTok{//variabile di configurazione BASE\_PATH}
+\VariableTok{$app}\NormalTok{{-}\textgreater{}setBasePath(}\ConstantTok{BASE\_PATH}\NormalTok{)}\OtherTok{;}
+
+\VariableTok{$app}\NormalTok{{-}\textgreater{}get(}\StringTok{\textquotesingle{}/\textquotesingle{}}\OtherTok{,} \KeywordTok{function}\NormalTok{ (}\ConstantTok{R}\NormalTok{equest }\VariableTok{$request}\OtherTok{,} \ConstantTok{R}\NormalTok{esponse }\VariableTok{$response}\OtherTok{,} \VariableTok{$args}\NormalTok{) \{}
+    \VariableTok{$response}\NormalTok{{-}\textgreater{}getBody(){-}\textgreater{}write(}\StringTok{\textquotesingle{}Hello world!\textquotesingle{}}\NormalTok{)}\OtherTok{;}
+    \ControlFlowTok{return} \VariableTok{$response}\OtherTok{;}
+\NormalTok{\})}\OtherTok{;}
+
+\VariableTok{$app}\NormalTok{{-}\textgreater{}get(}\StringTok{\textquotesingle{}/altra\_pagina\textquotesingle{}}\OtherTok{,} \KeywordTok{function}\NormalTok{ (}\ConstantTok{R}\NormalTok{equest }\VariableTok{$request}\OtherTok{,} \ConstantTok{R}\NormalTok{esponse }\VariableTok{$response}\OtherTok{,} \VariableTok{$args}\NormalTok{) \{}
+    \VariableTok{$response}\NormalTok{{-}\textgreater{}getBody(){-}\textgreater{}write(}\StringTok{\textquotesingle{}Questa è un}\SpecialCharTok{\textbackslash{}\textquotesingle{}}\StringTok{altra pagina\textquotesingle{}}\NormalTok{)}\OtherTok{;}
+    \ControlFlowTok{return} \VariableTok{$response}\OtherTok{;}
+\NormalTok{\})}\OtherTok{;}
+
+\VariableTok{$app}\NormalTok{{-}\textgreater{}run()}\OtherTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+Le parti più importanti di questo codice sono: 1. la variabile
+\texttt{\$app} rappresenta l'applicazione ed è quella che verrà usata
+per creare tutte le associazioni rotta - azione 2. per ogni rotta che si
+intende gestire, che in questo esempio sono la rotta ``vuota''
+\texttt{/} e la rotta \texttt{/altra\_pagina}, deve essere chiamato un
+metodo che mappa la richiesta HTTP che si intende utilizzare (GET, POST,
+\ldots) e nel quale vanno passati come parametri la rotta e l'azione da
+associare, sotto forma di funzione anonima. In questo esempio viene
+utilizzato per entrambe il metodo \texttt{get} e quindi una GET sulla
+rotta vuota produrrà una pagina con la scritta \texttt{Hello\ world} e
+una GET sulla rotta \texttt{/altra\_pagina} produrrà la scritta
+\texttt{Questa\ è\ un\textquotesingle{}altra\ pagina}. 3. I parametri
+della funzione anonima sono tre e rappresentano nell'ordine l'oggetto
+che contiene le informazioni della richiesta (\texttt{\$request}),
+quello che conterrà le informazioni della risposta (\texttt{\$response})
+e un vettore (\texttt{\$args}) che conterrà eventuali parametri
+contenuti nella rotta (si veda l'esempio con i template) 4. Nel corpo
+della funzione avviene la scrittura del body della risposta, utilizzando
+il metodo \texttt{write} applicato appunto al body e scrivendo quello
+che si vuole sia contenuto nella pagina di risposta
+(\textbf{attenzione}: il body della risposta è quello relativo al
+protocollo HTTP, non ha nulla a che vedere con il body della pagina
+HTML, hanno solo lo stesso nome).
+
+\textbf{Attenzione}: il parametro nella chiamata al metodo
+\texttt{setBasePath} deve rispecchiare l'esatta struttura delle cartelle
+dove si trova l'applicazione. In questo esempio il metodo viene chiamato
+in questo modo
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\VariableTok{$app}\NormalTok{{-}\textgreater{}setBasePath(}\StringTok{"/template\_slim"}\NormalTok{)}\OtherTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+perché l'applicazione si trova nella sottocartella \emph{template\_slim}
+all'interno della root del web server. Se ad esempio la cartella si
+trovasse nella cartella \emph{\textasciitilde piero/negozio} allora
+l'istruzione andrebbe riscritta come
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\VariableTok{$app}\NormalTok{{-}\textgreater{}setBasePath(}\StringTok{"/\textasciitilde{}piero/negozio"}\NormalTok{)}\OtherTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{configurare-apache-per-lurl-rewriting}{%
+\subsection{Configurare Apache per l'URL
+rewriting}\label{configurare-apache-per-lurl-rewriting}}
+
+In un'applicazione web è una buona idea avere un solo
+\emph{front-controller}, cioè un unico file, nel nostro caso
+\texttt{index.php}, a cui arrivano tutte le richieste HTTP,
+indipendentemente dalla \emph{rotta} effettiva della richiesta: quindi
+richieste indirizzate ad esempio a \texttt{/negozio/accessori} piuttosto
+che ad \texttt{/admin/} passeranno comunque attraverso il file
+\texttt{index.php}, che si occuperà del \emph{dispatching}, della
+\emph{distribuzione}, al pezzo di codice che dovrà gestire ogni
+particolare richiesta.
+
+Se quindi l'applicazione ha bisogno che tutte le richieste HTTP arrivino
+al file \emph{index.php}, è necessario istruire il web server per fare
+in modo che ogni richiesta che arriva, indipendentemente dall'URL
+effettivo, venga dirottata sul file \texttt{index.php}.
+
+Usando Apache presente in Xampp bisogna seguire questi passi: -
+abilitare il modulo di URL rewriting. Per far questo aprire con un
+editor di testo (anche PHPStorm va bene) il file
+\texttt{directory\_di\_xampp/apache/conf/httpd.conf} e controllare se la
+riga
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{LoadModule rewrite\_module modules/mod\_rewrite.so}
+\end{Highlighting}
+\end{Shaded}
+
+ha un \textbf{\#} davanti. Se così fosse va eliminato e altrettanto va
+fatto per la riga
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{LoadModule actions\_module modules/mod\_actions.so}
+\end{Highlighting}
+\end{Shaded}
+
+A questo punto bisogna far partire o ripartire Apache e la
+configurazione dovrebbe essere corretta (per ulteriori informazioni
+consultare
+\href{https://www.slimframework.com/docs/v4/start/web-servers.html}{questa
+pagina} oppure Google).
+
+Infine, per fare in modo che tutte le richieste vengano dirottate sul
+file \texttt{index.php} che si trova nella cartella
+\texttt{public}\footnote{Il motivo per il quale il file
+  \texttt{index.php} viene inserito nella cartella \texttt{public} e non
+  nella root del progetto è legato alla sicurezza dell'applicazione,
+  anche se qui non verrà approfondito questo tema.} bisogna aggiungere
+nella cartella principale, \emph{template\_slim} in questo esempio, un
+file \emph{.htaccess} con il seguente contenuto:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{RewriteEngine On}
+
+\NormalTok{RewriteRule \^{} public/index.php [QSA,L]}
+\end{Highlighting}
+\end{Shaded}
+
+Adesso dovrebbe essere sufficiente inserire l'indirizzo
+\texttt{localhost/template\_slim} (o quello relativo a dove si è deciso
+di mettere l'applicazione) nella barra degli indirizzi del browser e
+dovrebbe apparire una pagina con la scritta \textbf{Hello world}. Per
+ulteriore conferma provare a inserire
+\texttt{localhost/slim/altra\_pagina} e dovrebbe comparire il testo
+\textbf{Questa è un'altra pagina}.
+
+\hypertarget{gestione-degli-errori}{%
+\subsection{Gestione degli errori}\label{gestione-degli-errori}}
+
+Slim prevede già un meccanismo di gestione degli errori/eccezioni con un
+proprio Middleware\footnote{Per \emph{middleware} in questi contesti si
+  intende uno strato di software che si interpone tra la richiesta
+  dell'utente e l'applicazione vera e proprio, per svolgere delle
+  funzionalità che sono comuni a moltissime applicazioni e che, quindi,
+  possono essere riutilizzate senza bisogno di particolari modifiche.
+  Esempi di middleware sono appunto la gestione delle eccezioni e
+  l'autenticazione.} e per attivarlo è sufficiente introdurre questa
+riga di codice
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\VariableTok{$errorMiddleware} \OperatorTok{=} \VariableTok{$app}\NormalTok{{-}\textgreater{}addErrorMiddleware(}\KeywordTok{true}\OtherTok{,} \KeywordTok{true}\OtherTok{,} \KeywordTok{true}\NormalTok{)}\OtherTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+Di default il comportamento è quello di intercettare errori/eccezioni e
+mandare in risposta una pagina HTML con le informazioni sul problema,
+eventualmente con anche i dettagli dello stack di chiamate nel caso il
+primo parametro fosse uguale a \texttt{true}, come nell'esempio qua
+sopra. Gli altri due parametri sono rilevanti solo se si utilizza un
+meccanismo di \emph{logging}, per maggiori informazioni fare riferimento
+alla
+\href{https://www.slimframework.com/docs/v4/middleware/error-handling.html}{documentazione
+ufficiale}.
+
+\hypertarget{utilizzare-plates}{%
+\subsection{Utilizzare Plates}\label{utilizzare-plates}}
+
+Volendo utilizzare la libreria di templates Plates, come già fatto in
+precedenza, dovrà essere importata con il solito comando
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ExtensionTok{composer}\NormalTok{ require league/plates}
+\end{Highlighting}
+\end{Shaded}
+
+e nel codice andrà indicata con
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{use} \ConstantTok{L}\NormalTok{eague\textbackslash{}}\ConstantTok{P}\NormalTok{lates\textbackslash{}}\ConstantTok{E}\NormalTok{ngine}\OtherTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+ed è poi buona cosa utilizzare un
+\href{https://en.wikipedia.org/wiki/Dependency_injection}{Dipendency
+Injector} per utilizzarla all'interno di Slim. Senza dilungarsi sul
+concetto di Dipendency Injection, lo scopo è quello di separare in
+maniera pulita un servizio (in questo caso Plates) dall'applicazione
+vera e propria che utilizzerà quel servizio. In pratica per ottenere lo
+scopo bisogna prima importare una libreria che implementi il meccanismo
+di DI, e Slim suggerisce di utilizzare PHP-DI, e con Composer si fa
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ExtensionTok{composer}\NormalTok{ require php{-}di/slim{-}bridge:}\PreprocessorTok{*} \AttributeTok{{-}{-}with{-}all{-}dependencies}
+\end{Highlighting}
+\end{Shaded}
+
+Fatto questo, basterà aggiungere nel codice la creazione del Container,
+che poi dovrà essere passato all'applicazione
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\VariableTok{$container} \OperatorTok{=} \KeywordTok{new} \ConstantTok{C}\NormalTok{ontainer()}\OtherTok{;}
+\CommentTok{//da inserire prima della create di AppFactory}
+\ConstantTok{A}\NormalTok{ppFactory::setContainer(}\VariableTok{$container}\NormalTok{)}\OtherTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+Per aggiungere dei servizi al container è sufficiente usare il metodo
+\texttt{set}, che nel caso specifico di Plates verrà fatto in questo
+modo
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\VariableTok{$container}\NormalTok{{-}\textgreater{}set(}\StringTok{\textquotesingle{}template\textquotesingle{}}\OtherTok{,} \KeywordTok{function}\NormalTok{ ()\{}
+    \VariableTok{$engine} \OperatorTok{=} \KeywordTok{new} \ConstantTok{E}\NormalTok{ngine(}\StringTok{\textquotesingle{}../templates\textquotesingle{}}\OtherTok{,} \StringTok{\textquotesingle{}tpl\textquotesingle{}}\NormalTok{)}\OtherTok{;}
+    \VariableTok{$engine}\NormalTok{{-}\textgreater{}addData([}\StringTok{\textquotesingle{}base\_path\textquotesingle{}}\NormalTok{ =\textgreater{} }\ConstantTok{BASE\_PATH}\NormalTok{])}\OtherTok{;}
+    \ControlFlowTok{return} \VariableTok{$engine}\OtherTok{;}
+\NormalTok{\})}\OtherTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+dove il primo parametro è la chiave per recuperare il servizio e il
+secondo è la funzione anonima che ritorna il servizio, occupandosi della
+sua creazione.
+
+\textbf{Attenzione}: il primo parametro del costruttore dell'Engine deve
+come al solito contenere la cartella dove poi verranno inseriti i vari
+template, ma il percorso deve essere relativo al file dove si trovano
+queste istruzioni: nel nostro caso in cui il file \texttt{index.php} si
+trova nella cartella \textbf{public} il nome della cartella deve essere
+preceduto da \texttt{../}. Inoltre viene usato anche il metodo
+\texttt{add} per aggiungere una variabile, in questo caso
+\texttt{base\_path}, in modo che sia visibile al template. Questa
+variabile è necessaria per poter generare dei link corretti all'interno
+dei template e contiene
+
+Una volta aggiunto Plates nel container, per poterlo utilizzare basterà
+aggiungere del codice come il seguente nelle callback per le rotte su
+cui vogliamo usare dei template.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\VariableTok{$app}\NormalTok{{-}\textgreater{}get(}\StringTok{\textquotesingle{}/saluti/\{name\}\textquotesingle{}}\OtherTok{,} \KeywordTok{function}\NormalTok{ (}\ConstantTok{R}\NormalTok{equest }\VariableTok{$request}\OtherTok{,} \ConstantTok{R}\NormalTok{esponse }\VariableTok{$response}\OtherTok{,} \VariableTok{$args}\NormalTok{) \{}
+    \VariableTok{$template} \OperatorTok{=} \VariableTok{$this}\NormalTok{{-}\textgreater{}get(}\StringTok{\textquotesingle{}template\textquotesingle{}}\NormalTok{)}\OtherTok{;}
+    \VariableTok{$response}\NormalTok{{-}\textgreater{}getBody(){-}\textgreater{}write(}\VariableTok{$template}\NormalTok{{-}\textgreater{}render(}\StringTok{\textquotesingle{}saluti\textquotesingle{}}\OtherTok{,}
+\NormalTok{            [}
+                \StringTok{\textquotesingle{}name\textquotesingle{}}\NormalTok{ =\textgreater{} }\VariableTok{$args}\NormalTok{[}\StringTok{\textquotesingle{}name\textquotesingle{}}\NormalTok{]}
+\NormalTok{            ]}
+\NormalTok{        )}
+\NormalTok{    )}\OtherTok{;}
+    \ControlFlowTok{return} \VariableTok{$response}\OtherTok{;}
+\NormalTok{\})}\OtherTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+In questo esempio ci sono due aspetti della libreria \texttt{Slim} che
+devono essere approfonditi: 1. La rotta contiene al suo interno una
+parte parametrica, inclusa tra le parentesi graffe, in questo esempio
+\emph{name}. Quel parametro indica che una rotta in cui la prima parte è
+\texttt{/saluti/} verrà intercettata. 2. La parte parametrica verrà
+recuperata attraverso il parametro \texttt{\$args}, che sarà la libreria
+stessa a popolare con gli eventuali argomenti passati attraverso la GET,
+in questo caso appunto il \texttt{name}. Se quindi la rotta fosse
+\texttt{GET\ /saluti/alessandro}, il vettore \texttt{\$args} avrà una
+chiave di nome \texttt{name} il cui valore sarà \texttt{alessandro},
+valore che potrà essere recuperato come si può vedere nel codice con la
+solita notazione
+\texttt{\$args{[}\textquotesingle{}name\textquotesingle{}{]}}.
+
+\hypertarget{connessione-al-database}{%
+\subsection{Connessione al database}\label{connessione-al-database}}
+
+Per utilizzare il database e dare un minimo di organizzazione, conviene
+isolare l'aspetto della connessione in una classe apposita, che avrà un
+metodo da invocare ogni volta che nell'applicazione è necessario
+recuperare dei dati dal DB. Per far questo vien creato un file,
+\emph{config.php} all'interno della cartella \emph{conf}, che conterrà
+le informazioni necessarie alla connessione in questo modo:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{const} \ConstantTok{DB\_HOST} \OperatorTok{=} \StringTok{\textquotesingle{}host\textquotesingle{}}\OtherTok{;}
+\KeywordTok{const} \ConstantTok{DB\_NAME} \OperatorTok{=} \StringTok{\textquotesingle{}db\_name\textquotesingle{}}\OtherTok{;}
+\KeywordTok{const} \ConstantTok{DB\_USER} \OperatorTok{=} \StringTok{\textquotesingle{}user\textquotesingle{}}\OtherTok{;}
+\KeywordTok{const} \ConstantTok{DB\_PASSWORD} \OperatorTok{=} \StringTok{\textquotesingle{}password\textquotesingle{}}\OtherTok{;}
+\KeywordTok{const} \ConstantTok{DB\_CHAR} \OperatorTok{=} \StringTok{\textquotesingle{}utf8\textquotesingle{}}\OtherTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+con i parametri opportunamente configurati per la propria connessione.
+
+La classe che fornirà la connessione vera e propria verrà invece creata
+nel file \emph{Connection.php} all'interno della cartella \emph{Util}.
+
+Per poter utilizzare in ogni punto dell'applicazione questa nuova classe
+sarà necessario indicare al meccanismo di \emph{autoloading} dove
+recuperarla, in modo da non sia necessario dover includere a mano i file
+ogni volta. Per far questo nel file \emph{Connection.php} sarà
+necessario aggiungere la linea
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{namespace} \ConstantTok{U}\NormalTok{til}\OtherTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+e poi ricostruire i file di autoloading aggiungendo le righe
+
+\begin{Shaded}
+\begin{Highlighting}[]
+  \StringTok{"autoload"}\OtherTok{:}\NormalTok{ \{}
+    \StringTok{"psr{-}4"}\OtherTok{:}\NormalTok{ \{}
+      \StringTok{"Util}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{"} \OtherTok{:} \StringTok{"Util/"}
+\NormalTok{    \}}
+\NormalTok{  \}}\OtherTok{,}
+\end{Highlighting}
+\end{Shaded}
+
+all'interno di \emph{composer.json} e chiamando \textbf{composer} in
+questo modo
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ExtensionTok{composer}\NormalTok{ dumpautoload}
+\end{Highlighting}
+\end{Shaded}
+
+in modo che aggiorni i file all'interno della cartella \emph{vendor} per
+permettere il caricamento della classe \emph{Connection}, che quindi
+sarà utilizzabile semplicemente aggiungendo la riga
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{use} \ConstantTok{U}\NormalTok{til\textbackslash{}}\ConstantTok{C}\NormalTok{onnection}\OtherTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+all'inizio di ogni file che la vorrà utilizzare, nel nostro caso
+\emph{index.php}.
+
+La classe \emph{Connection} avrà un solo attributo statico,
+\texttt{\$pdo}, che rappresenta appunto la connessione al DB, avrà il
+costruttore privato perchè non è pensata per essere istanziata e un
+metodo \texttt{getInstance()} che restituisce la connessione,
+istanziando la connessione se è la prima volta che viene chiamato in uno
+script oppure restituendo la connessione corrente se esiste già. Si veda
+il contenuto di \emph{Connection.php} per maggiori dettagli.
+
+\hypertarget{gestione-dei-dati-presenti-nel-db-con-il-pattern-mvc}{%
+\subsection{Gestione dei dati presenti nel DB con il pattern
+MVC}\label{gestione-dei-dati-presenti-nel-db-con-il-pattern-mvc}}
+
+Dove la View in queste applicazioni è il \emph{template}, per quanto
+riguarda il Model si procederà come visto in precedenza, dove per il
+controller si creeranno delle classi in base alle esigenze
+dell'applicazione.
+
+\hypertarget{esempio-della-gestione-di-un-negozio}{%
+\subsubsection{Esempio della gestione di un
+negozio}\label{esempio-della-gestione-di-un-negozio}}
+
+Per applicare i concetti a un esempio verrà ripreso il negozio di
+prodotti d'abbigliamento, dove per semplicità verrà considerata solo la
+presenza della tabella \textbf{prodotto} mostrata qua sotto:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{erDiagram}
+\NormalTok{    prodotto \{}
+\NormalTok{string id PK}
+\NormalTok{string nome}
+\NormalTok{string descrizione}
+\NormalTok{float prezzo}
+\NormalTok{string genere "Uomo o donna"}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{la-classe-prodottorepository}{%
+\subsection{La classe
+ProdottoRepository}\label{la-classe-prodottorepository}}
+
+L'implementazione del modello verrà realizzata creando una classe (o più
+classi) apposita che contenga al proprio interno i metodi ritenuti
+opportuni per l'interazione con i dati. Questi metodi saranno
+\emph{statici}, in quanto la classe non verrà utilizzata per creare
+oggetti, ma solo per avere un'organizzazione dei metodi ordinata.
+
+Per la tabella \texttt{prodotto} un possibile insieme di metodi, con la
+relativa implementazione, potrebbe essere il seguente:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{class} \ConstantTok{P}\NormalTok{rodottoRepository\{}
+
+    \KeywordTok{public} \KeywordTok{static} \KeywordTok{function}\NormalTok{ listAll()\{}
+        \VariableTok{$pdo} \OperatorTok{=} \ConstantTok{C}\NormalTok{onnection::getInstance()}\OtherTok{;}
+        \VariableTok{$risposta} \OperatorTok{=} \VariableTok{$pdo}\NormalTok{{-}\textgreater{}query(}\StringTok{"SELECT * FROM prodotto"}\NormalTok{)}\OtherTok{;}
+        \ControlFlowTok{return} \VariableTok{$risposta}\NormalTok{{-}\textgreater{}fetchAll()}\OtherTok{;}
+\NormalTok{    \}}
+
+    \KeywordTok{public} \KeywordTok{static} \KeywordTok{function}\NormalTok{ listAllMale()\{}
+        \VariableTok{$pdo} \OperatorTok{=} \ConstantTok{C}\NormalTok{onnection::getInstance()}\OtherTok{;}
+        \VariableTok{$risposta} \OperatorTok{=} \VariableTok{$pdo}\NormalTok{{-}\textgreater{}query(}\StringTok{\textquotesingle{}SELECT * FROM prodotto WHERE genere = "Uomo"\textquotesingle{}}\NormalTok{)}\OtherTok{;}
+        \ControlFlowTok{return} \VariableTok{$risposta}\NormalTok{{-}\textgreater{}fetchAll()}\OtherTok{;}
+\NormalTok{    \}}
+
+    \KeywordTok{public} \KeywordTok{static} \KeywordTok{function}\NormalTok{ listAllFemale()\{}
+        \VariableTok{$pdo} \OperatorTok{=} \ConstantTok{C}\NormalTok{onnection::getInstance()}\OtherTok{;}
+        \VariableTok{$risposta} \OperatorTok{=} \VariableTok{$pdo}\NormalTok{{-}\textgreater{}query(}\StringTok{\textquotesingle{}SELECT * FROM prodotto WHERE genere = "Donna"\textquotesingle{}}\NormalTok{)}\OtherTok{;}
+        \ControlFlowTok{return} \VariableTok{$risposta}\NormalTok{{-}\textgreater{}fetchAll()}\OtherTok{;}
+\NormalTok{    \}}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+dove il primo metodo recupera la lista di tutti i prodotti, il secondo
+di tutti quelli di genere maschile e il terzo di tutti quelli di genere
+femminile. L'implementazione specifica potrebbe essere anche diversa,
+con, ad esempio, i due metodi per i generi che chiamano un unico metodo
+in cui il genere è un parametro, ma questo non è rilevante per chi li
+utilizzerà, in quanto quello che conta è che, chiamandoli, riceverà in
+cambio un vettore contenente i capi di abbigliamento desiderati.
+
+\hypertarget{la-classe-prodottocontroller}{%
+\subsection{La classe
+ProdottoController}\label{la-classe-prodottocontroller}}
+
+Il \emph{controller} si occuperà invece di far interagire la vista con
+il modello, prendendo gli input forniti dalla vista, generalmente sotto
+forma di parametri GET o POST, elaborando l'azione o le azioni opportune
+per recuperare i dati di interesse dal database, e infine iniettando il
+risultato nella vista opportuna.
+
+Anche in questo caso un'implementazione ragionevole potrebbe essere la
+seguente:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{class} \ConstantTok{P}\NormalTok{rodottoController\{}
+
+    \KeywordTok{private} \ConstantTok{E}\NormalTok{ngine }\VariableTok{$templateEngine}\OtherTok{;}
+
+    \KeywordTok{public} \KeywordTok{function} \BuiltInTok{\_\_construct}\NormalTok{(}\ConstantTok{E}\NormalTok{ngine }\VariableTok{$templateEngine}\NormalTok{)\{}
+        \VariableTok{$this}\NormalTok{{-}\textgreater{}templateEngine }\OperatorTok{=} \VariableTok{$templateEngine}\OtherTok{;}
+\NormalTok{    \}}
+
+    \KeywordTok{public} \KeywordTok{function}\NormalTok{ listAll()\{}
+        \ControlFlowTok{return} \VariableTok{$this}\NormalTok{{-}\textgreater{}listAllByGenre(}\StringTok{\textquotesingle{}All\textquotesingle{}}\NormalTok{)}\OtherTok{;}
+\NormalTok{    \}}
+
+    \KeywordTok{public} \KeywordTok{function}\NormalTok{ listAllByGenre(}\VariableTok{$genere}\NormalTok{)\{}
+        \ControlFlowTok{if}\NormalTok{ (}\VariableTok{$genere} \OperatorTok{===} \StringTok{\textquotesingle{}All\textquotesingle{}}\NormalTok{)}
+            \VariableTok{$prodotti} \OperatorTok{=} \ConstantTok{P}\NormalTok{rodottoRepository::listAll()}\OtherTok{;}
+        \ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{ (}\VariableTok{$genere} \OperatorTok{===} \StringTok{\textquotesingle{}Uomo\textquotesingle{}}\NormalTok{)}
+            \VariableTok{$prodotti} \OperatorTok{=} \ConstantTok{P}\NormalTok{rodottoRepository::listAllMale()}\OtherTok{;}
+        \ControlFlowTok{else}
+            \VariableTok{$prodotti} \OperatorTok{=} \ConstantTok{P}\NormalTok{rodottoRepository::listAllFemale()}\OtherTok{;}
+        \ControlFlowTok{return} \VariableTok{$this}\NormalTok{{-}\textgreater{}templateEngine{-}\textgreater{}render(}\StringTok{\textquotesingle{}negozio\textquotesingle{}}\OtherTok{,}
+\NormalTok{            [}
+                \StringTok{\textquotesingle{}prodotti\textquotesingle{}}\NormalTok{ =\textgreater{} }\VariableTok{$prodotti}\OtherTok{,}
+                \StringTok{\textquotesingle{}genere\textquotesingle{}}\NormalTok{ =\textgreater{} }\VariableTok{$genere}
+\NormalTok{            ]}
+\NormalTok{        )}\OtherTok{;}
+
+\NormalTok{    \}}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+A differenza del modello, in questo caso si è preferito avere una classe
+di cui istanziare degli oggetti e che avesse come unico attributo un
+riferimento al \texttt{template}, sotto forma di un oggetto di tipo
+\texttt{Engine}, visto in precedenza e che rappresenta il modo in cui
+Plates gestisce la generazione di template.
+
+Creando quindi un oggetto di tipo \texttt{ProdottoController}, nel
+costruttore si passerà l'oggetto per la gestione del template, in modo
+che nel codice dei vari metodi il controller possa utilizzarlo per il
+render del codice HTML. Guardando ad esempio il metodo
+\texttt{listAllByGenre}, il cui scopo è quello di restituire la lista
+dei prodotti in base al genere desiderato, che può essere \emph{All},
+\emph{Donna} o \emph{Uomo}, si vede che il codice si interfaccia con il
+modello per chiedere l'elenco desiderato in base al genere, e,
+successivamente, utilizza i dati recuperati per passarli al template che
+si preoccuperà di farne la resa in HTML, ritornando proprio l'HTML
+generato.
+
+In questo esempio il template, \texttt{negozio.tpl}, avrà una struttura
+di questo tipo:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DataTypeTok{\textless{}!doctype }\NormalTok{html}\DataTypeTok{\textgreater{}}
+\DataTypeTok{\textless{}}\KeywordTok{html} \ErrorTok{lang}\OtherTok{=}\StringTok{"it"}\DataTypeTok{\textgreater{}}
+\DataTypeTok{\textless{}}\KeywordTok{head}\DataTypeTok{\textgreater{}}
+    \DataTypeTok{\textless{}}\KeywordTok{meta} \ErrorTok{charset}\OtherTok{=}\StringTok{"UTF{-}8"}\DataTypeTok{\textgreater{}}
+    \DataTypeTok{\textless{}}\KeywordTok{title}\DataTypeTok{\textgreater{}}\NormalTok{Esempio negozio con pattern MVC}\DataTypeTok{\textless{}/}\KeywordTok{title}\DataTypeTok{\textgreater{}}
+\DataTypeTok{\textless{}/}\KeywordTok{head}\DataTypeTok{\textgreater{}}
+\DataTypeTok{\textless{}}\KeywordTok{body}\DataTypeTok{\textgreater{}}
+    \DataTypeTok{\textless{}}\KeywordTok{h1}\DataTypeTok{\textgreater{}}\NormalTok{Esempio negozio con pattern MVC}\DataTypeTok{\textless{}/}\KeywordTok{h1}\DataTypeTok{\textgreater{}}
+    \DataTypeTok{\textless{}}\KeywordTok{p}\DataTypeTok{\textgreater{}\textless{}}\KeywordTok{a} \ErrorTok{href}\OtherTok{=}\StringTok{"}\ErrorTok{\textless{}}\StringTok{?=$base\_path?\textgreater{}/negozio/genere/All"}\DataTypeTok{\textgreater{}}\NormalTok{Tutti i capi}\DataTypeTok{\textless{}/}\KeywordTok{a}\DataTypeTok{\textgreater{}\textless{}/}\KeywordTok{p}\DataTypeTok{\textgreater{}}
+    \DataTypeTok{\textless{}}\KeywordTok{p}\DataTypeTok{\textgreater{}\textless{}}\KeywordTok{a} \ErrorTok{href}\OtherTok{=}\StringTok{"}\ErrorTok{\textless{}}\StringTok{?=$base\_path?\textgreater{}/negozio/genere/Donna"}\DataTypeTok{\textgreater{}}\NormalTok{Abbigliamento femminile}\DataTypeTok{\textless{}/}\KeywordTok{a}\DataTypeTok{\textgreater{}\textless{}/}\KeywordTok{p}\DataTypeTok{\textgreater{}}
+    \DataTypeTok{\textless{}}\KeywordTok{p}\DataTypeTok{\textgreater{}\textless{}}\KeywordTok{a} \ErrorTok{href}\OtherTok{=}\StringTok{"}\ErrorTok{\textless{}}\StringTok{?=$base\_path?\textgreater{}/negozio/genere/Uomo"}\DataTypeTok{\textgreater{}}\NormalTok{Abbigliamento maschile}\DataTypeTok{\textless{}/}\KeywordTok{a}\DataTypeTok{\textgreater{}\textless{}/}\KeywordTok{p}\DataTypeTok{\textgreater{}}
+    \DataTypeTok{\textless{}}\KeywordTok{h2}\DataTypeTok{\textgreater{}}\NormalTok{Lista dei prodotti: }\KeywordTok{\textless{}?}\NormalTok{=$genere}\KeywordTok{?\textgreater{}}\DataTypeTok{\textless{}/}\KeywordTok{h2}\DataTypeTok{\textgreater{}}
+    \DataTypeTok{\textless{}}\KeywordTok{ul}\DataTypeTok{\textgreater{}}
+        \KeywordTok{\textless{}?php}\NormalTok{ foreach ($prodotti as $prodotto): }\KeywordTok{?\textgreater{}}
+            \DataTypeTok{\textless{}}\KeywordTok{li}\DataTypeTok{\textgreater{}}\KeywordTok{\textless{}?}\NormalTok{=$prodotto[\textquotesingle{}nome\textquotesingle{}]}\KeywordTok{?\textgreater{}}\NormalTok{: }\DataTypeTok{\textless{}}\KeywordTok{i}\DataTypeTok{\textgreater{}}\KeywordTok{\textless{}?}\NormalTok{=$prodotto[\textquotesingle{}descrizione\textquotesingle{}]}\KeywordTok{?\textgreater{}}\DataTypeTok{\textless{}/}\KeywordTok{i}\DataTypeTok{\textgreater{}\textless{}/}\KeywordTok{li}\DataTypeTok{\textgreater{}}
+        \KeywordTok{\textless{}?php}\NormalTok{ endforeach;}\KeywordTok{?\textgreater{}}
+    \DataTypeTok{\textless{}/}\KeywordTok{ul}\DataTypeTok{\textgreater{}}
+\DataTypeTok{\textless{}/}\KeywordTok{body}\DataTypeTok{\textgreater{}}
+\DataTypeTok{\textless{}/}\KeywordTok{html}\DataTypeTok{\textgreater{}}
+\end{Highlighting}
+\end{Shaded}
+
+e la resa, con la rotta \texttt{GET\ /negozio/genere/Donna} potrebbe
+essere la seguente pagina:
+
+\begin{figure}
+\centering
+\includegraphics{esempio.png}
+\caption{Esempio della pagina dell'elenco dei prodotti}
+\end{figure}
+
+\hypertarget{riassunto}{%
+\section{Riassunto}\label{riassunto}}
+
+Riassumendo quanto visto finora:
+
+\begin{itemize}
+\tightlist
+\item
+  l'applicazione ha un file che funge da \emph{front-controller}, cioè
+  un file a cui arrivano tutte le richieste, indipendentemente dall'URL,
+  che si preoccuperà di dirottarle al controller opportuno. Questo file
+  sarà sempre il file \texttt{index.html} e sarà all'interno della
+  cartella \texttt{public}
+\item
+  il server web, in questo caso Apache, deve essere configurato per
+  ridirigere tutte le richieste al \emph{front-controller}
+\item
+  le configurazioni del database o altro vanno inserite nel file
+  \texttt{config.php} all'interno della cartella \texttt{conf}
+\item
+  la connessione al database viene gestita dalla classe
+  \texttt{Connection}
+\item
+  il modello dei dati viene incapsulato nella classe, o nelle classi,
+  che ``parlano'' direttamente con il database e restituiscono, tramite
+  metodi statici, dei vettori contenenti le informazioni desiderate. Per
+  convenzione i modelli verranno messi nella cartella \texttt{Model} e
+  saranno chiamati con il nome che rappresenta i dati, ad esempio
+  \emph{Prodotto}, seguito dalla parola \emph{Repository}
+\item
+  il controller, che si occupa dell'interazione con la vista e il
+  modello, sarà una classe, o più classi, contenente un riferimento al
+  template, che verrà referenziato da un parametro all'atto della
+  creazione dell'oggetto, e i metodi per rappresentare le funzionalità
+  dell'applicazione. Per convenzione i controller verranno messi nella
+  cartella `Controller' e saranno chiamati con un nome che ne
+  rappresenta la funzionalità, ad esempio \emph{Prodotto}, seguito dalla
+  parola \emph{Controller}
+\end{itemize}
+
+La struttura delle cartelle sarà quindi la seguente:
+
+\begin{figure}
+\centering
+\includegraphics{struttura.png}
+\caption{Struttura delle cartelle di un'applicazione Slim organizzata
+secondo il pattern MVC}
+\end{figure}
