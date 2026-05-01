@@ -1,2 +1,5 @@
-/vendor/
+**/vendor/
 /composer.lock
+
+# escludo il file con le variabili d'ambiente
+.env
