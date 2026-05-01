@@ -25,21 +25,13 @@ AppFactory::setContainer($container);
 
 $app = AppFactory::create();
 
-//Questa parte deve contenere il percorso della
-//sottocartella dove si trova l'applicazione in questo caso inserito nella
-//variabile di configurazione BASE_PATH
-$app->setBasePath(BASE_PATH);
-
 $container->set('template', function (){
     $engine = new Engine('templates', 'tpl');
-    $engine->addData(['base_path' => BASE_PATH]);
     $user = Authenticator::getUser();
     $username = isset($user['username']) ? $user['username'] : null;
     $engine->addData(['user' => $username]);
     return $engine;
 });
-
-$container->set('images', IMAGES);
 
 //Gestione del middleware di autenticazione
 
@@ -48,7 +40,7 @@ $authMiddleware = function(Request $request, RequestHandler $handler) use ($app)
     $routeName = $request->getUri()->getPath();
 
     // Route della parte pubblica
-    $publicRoute = BASE_PATH . '/negozio';
+    $publicRoute = '/negozio';
 
     //Se è una route pubblica non fa nulla
     if (str_starts_with($routeName, $publicRoute)) {
@@ -56,7 +48,7 @@ $authMiddleware = function(Request $request, RequestHandler $handler) use ($app)
     }
 
     //La route di login deve passare
-    if ($routeName === BASE_PATH . '/login') {
+    if ($routeName === '/login') {
         return $handler->handle($request);
     }
 

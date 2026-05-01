@@ -7,7 +7,7 @@
 
     <h1>Pannello di amministrazione</h1>
     <p>
-        <a href="<?=$base_path?>/admin/prodotto" class="btn btn-primary">Aggiungi un nuovo prodotto</a>
+        <a href="/admin/prodotto" class="btn btn-primary">Aggiungi un nuovo prodotto</a>
     </p>
     <h2>Lista dei prodotti</h2>
 <table class="table">
@@ -26,8 +26,8 @@
             <td><?=$prodotto['nome']?></td>
             <td><?=$prodotto['descrizione']?></td>
             <td><?=$prodotto['prezzo']?></td>
-            <td><a href="<?=$base_path?>/admin/prodotto/<?=$prodotto['id']?>" class="icon icon-edit"></a></td>
-            <td><a href="<?=$base_path?>/admin/prodotto/<?=$prodotto['id']?>/delete" class="icon icon-delete"></a></td>
+            <td><a href="/admin/prodotto/<?=$prodotto['id']?>" class="icon icon-edit"></a></td>
+            <td><a href="/admin/prodotto/<?=$prodotto['id']?>/delete" class="icon icon-delete"></a></td>
         </tr>
     <?php endforeach;?>
     </tbody>

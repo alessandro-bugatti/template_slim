@@ -11,7 +11,7 @@
 
 <div class="card">
     <div class="card-image">
-        <img src="<?=$base_path?>/images/<?=$prodotto['image']?>"
+        <img src="/images/<?=$prodotto['image']?>"
              class="img-responsive" alt="<?=$prodotto['nome']?>">
     </div>
     <div class="card-header">
@@ -22,6 +22,6 @@
         <?=$prodotto['descrizione']?>
     </div>
     <div class="card-footer">
-        <a href="<?=$base_path?>/negozio">Torna al negozio</a>
+        <a href="/negozio">Torna al negozio</a>
     </div>
 </div>

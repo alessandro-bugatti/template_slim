@@ -6,7 +6,7 @@
 <?php $this->layout('home', ['title' => 'Negozio']) ?>
     <h1>Pannello di amministrazione</h1>
     <h2>Nuovo prodotto</h2>
-<form enctype="multipart/form-data" class="form-horizontal" action="<?=$base_path?>/admin/prodotto<?=isset($prodotto['id'])?'/'.$prodotto['id']:''?>" method="post">
+<form enctype="multipart/form-data" class="form-horizontal" action="/admin/prodotto<?=isset($prodotto['id'])?'/'.$prodotto['id']:''?>" method="post">
     <input type="hidden" name="MAX_FILE_SIZE" value="1000000" />
     <div class="form-group">
         <div class="col-3 col-sm-12">
