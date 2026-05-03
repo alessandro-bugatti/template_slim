@@ -12,8 +12,8 @@ use Slim\Factory\AppFactory;
 use Controller\ProdottoController;
 
 
-require '../vendor/autoload.php';
-require_once '../conf/config.php';
+require 'vendor/autoload.php';
+require_once 'conf/config.php';
 use League\Plates\Engine;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Util\Authenticator;
@@ -25,21 +25,18 @@ AppFactory::setContainer($container);
 
 $app = AppFactory::create();
 
-//Questa parte deve contenere il percorso della
-//sottocartella dove si trova l'applicazione in questo caso inserito nella
-//variabile di configurazione BASE_PATH
-$app->setBasePath(BASE_PATH);
-
 $container->set('template', function (){
-    $engine = new Engine('../templates', 'tpl');
-    $engine->addData(['base_path' => BASE_PATH]);
+    $engine = new Engine(TEMPLATE_DIR, 'tpl');
     $user = Authenticator::getUser();
     $username = isset($user['username']) ? $user['username'] : null;
-    $engine->addData(['user' => $username]);
+    $engine->addData([
+        'user' => $username,
+        'images_base_url' => IMAGES_BASE_URL,
+        'assets_base_url' => ASSETS_BASE_URL,
+        'upload_max_file_size' => UPLOAD_MAX_FILE_SIZE,
+    ]);
     return $engine;
 });
-
-$container->set('images', IMAGES);
 
 //Gestione del middleware di autenticazione
 
@@ -48,7 +45,7 @@ $authMiddleware = function(Request $request, RequestHandler $handler) use ($app)
     $routeName = $request->getUri()->getPath();
 
     // Route della parte pubblica
-    $publicRoute = BASE_PATH . '/negozio';
+    $publicRoute = '/negozio';
 
     //Se è una route pubblica non fa nulla
     if (str_starts_with($routeName, $publicRoute)) {
@@ -56,7 +53,7 @@ $authMiddleware = function(Request $request, RequestHandler $handler) use ($app)
     }
 
     //La route di login deve passare
-    if ($routeName === BASE_PATH . '/login') {
+    if ($routeName === '/login') {
         return $handler->handle($request);
     }
 
@@ -115,8 +112,8 @@ $customErrorHandler = function (
  * Note: This middleware should be added last. It will not handle any exceptions/errors
  * for middleware added after it.
  */
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
-if (MY_ERROR_HANDLER)
+$errorMiddleware = $app->addErrorMiddleware(APP_DEBUG, true, true);
+if (APP_USE_CUSTOM_ERROR_HANDLER)
     $errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
 

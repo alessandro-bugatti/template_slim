@@ -1,2 +1,14 @@
-/vendor/
+**/vendor/
 /composer.lock
+
+# escludo il file con le variabili d'ambiente
+.env
+/.idea/dataSources.xml
+/.idea/db-forest-config.xml
+/.idea/deployment.xml
+/.idea/laravel-idea.xml
+/.idea/modules.xml
+/.idea/php.xml
+/.idea/sqldialects.xml
+/.idea/vcs.xml
+/.idea/webServers.xml

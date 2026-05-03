@@ -2,6 +2,8 @@
 
 namespace Controller;
 
+use Laravel\SerializableClosure\UnsignedSerializableClosure;
+use Model\OperaRepository;
 use Model\ProdottoRepository;
 use Psr\Container\ContainerInterface;
 use Slim\Psr7\Request;
@@ -46,30 +48,35 @@ class AdminController{
 
     public function addProdotto(Request $request, Response $response, array $args): ?Response{
         $params = (array)$request->getParsedBody();
-
-        $directory = $this->container->get('images');
         $uploadedFiles = $request->getUploadedFiles();
-        $uploadedFile = $uploadedFiles['immagine'];
-        $name = sha1($uploadedFile->getClientFilename() . rand()) . '.jpg';
+        if ($uploadedFiles['immagine']->getError() === UPLOAD_ERR_NO_FILE){
+            $name = ProdottoRepository::getProdotto($args['id'])['image'];
+        }
+        else {
+            $uploadedFile = $uploadedFiles['immagine'];
+            $name = sha1($uploadedFile->getClientFilename() . rand()) . '.jpg';
+            $imageDir = rtrim(IMAGES_DIR, '/');
+            if (!is_dir($imageDir)) {
+                mkdir($imageDir, 0775, true);
+            }
+            $filename = $imageDir . '/' . $name;
+            $uploadedFile->moveTo($filename);
+        }
         //Viene aggiunto il nome dell'immagine per poterla memorizzare nel DB
         $params['image'] = $name;
-        $filename = '../' . $directory . '/' . $name;
-        if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
-            $uploadedFile->moveTo($filename);
-            if ($args != null)
-                ProdottoRepository::update($args['id'], $params);
-            else
-                ProdottoRepository::add($params);
-        }
+        if ($args != null)
+            ProdottoRepository::update($args['id'], $params);
+        else
+            ProdottoRepository::add($params);
         $response = $response->withStatus(302);
-        return $response->withHeader('Location', BASE_PATH . '/admin');
+        return $response->withHeader('Location', '/admin');
     }
 
     public function deleteProdotto(Request $request, Response $response, array $args): Response{
         $id = $args['id'];
         ProdottoRepository::delete($id);
         $response = $response->withStatus(302);
-        return $response->withHeader('Location', BASE_PATH . '/admin');
+        return $response->withHeader('Location', '/admin');
     }
 
     public function login(Request $request, Response $response, array $args): Response{
@@ -81,6 +88,6 @@ class AdminController{
     public function logout(Request $request, Response $response, array $args): Response{
         Authenticator::logout();
         $response = $response->withStatus(302);
-        return $response->withHeader('Location', BASE_PATH . '/negozio');
+        return $response->withHeader('Location', '/negozio');
     }
 }
