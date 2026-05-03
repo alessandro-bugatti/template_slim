@@ -8,6 +8,49 @@ Per gestire meglio l'organizzazione di applicazioni di media complessità, senza
 librerie complete ma anche decisamente più complesse, si vedrà come utilizzare Slim e se ne fornirà
 una proposta di come strutturare applicazioni con accesso a database e con presenza di più funzionalità.
 
+## Il progetto in Docker (panoramica)
+
+In origine questo progetto girava direttamente sulla macchina host. Ora invece viene eseguito in container,
+in modo da avere un ambiente più ripetibile: stessa versione di servizi, stessa configurazione di rete
+e meno differenze tra un computer e l'altro.
+
+### Come è organizzato
+
+Con `docker-compose.yml` vengono avviati due servizi principali:
+
+- `web`: esegue PHP/Apache e serve l'applicazione
+- `database`: esegue MariaDB con i dati dell'app
+
+In sviluppo, `docker-compose.override.yml` aggiunge anche `adminer` per ispezionare il database via browser.
+
+### Volumi e rete
+
+La cartella `www/` del progetto è montata nel container `web` (`/var/www/html`), quindi quando modifichi il codice
+locale, il container vede subito i cambiamenti. I dati del database e lo storage applicativo sono mantenuti in volumi
+dedicati (`db_data` e `storage_data`), così non si perdono al riavvio dei container.
+
+I servizi comunicano su una rete Docker privata (`app_network`): l'app può raggiungere il database usando il nome
+del servizio (`database`) invece di un IP fisso.
+
+### Da `.env` a `config.php`
+
+Le variabili sono dichiarate in `.env.example` e valorizzate nel file locale `.env`.
+Docker Compose passa quelle variabili ai container tramite `env_file`, e il codice PHP le legge tramite `$_ENV`.
+
+Schema rapido del flusso:
+
+```text
+.env.example -> .env -> docker compose (env_file) -> container web -> $_ENV -> conf/config.php (costanti) -> codice applicativo
+```
+
+Per questo in `conf/config.php` trovi costanti ricavate da variabili ambiente, ad esempio:
+
+- configurazione DB (`MYSQL_HOST`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`)
+- configurazione applicativa (`APP_ENV`, `APP_DEBUG`, `TEMPLATE_DIR`, `IMAGES_DIR`, ...)
+
+Nelle prossime sezioni useremo queste variabili in modo esplicito, così sarà chiaro dove vengono definite
+e in quali punti dell'applicazione entrano in gioco.
+
 ## Cos'é Slim
 Il sito di Slim definisce la libreria in questo modo
 
@@ -27,22 +70,19 @@ Per informazioni più dettagliate si veda il sito di riferimento: [Slim](https:/
 
 ### Come installare
 
-Utilizzando Composer[^composer-proxy] bisogna installare nel proprio progetto la libreria `Slim`
+In questo progetto le dipendenze PHP non vengono installate sulla macchina host, ma nel container `web`
+dove Composer è già disponibile.
 
-[^composer-proxy]: Nei laboratori dove è presente il proxy, è necessario operare con Fiddler come si è fatto in altre occasioni
-
-```bash
-composer require slim/slim:"4.*"
-```
-
-Successivamente è necessario un altro componente per gestire le richieste, che va installato sempre con Composer.
+Le librerie richieste sono dichiarate in `composer.json` (ad esempio `slim/slim`, `slim/psr7`, `league/plates`
+e `php-di/slim-bridge`), quindi è sufficiente installarle tutte in una volta con:
 
 ```bash
-composer require slim/psr7
+docker exec <PROJECT_NAME>_web composer install
 ```
 
+Sostituisci `<PROJECT_NAME>` con il valore di `PROJECT_NAME` presente nel file `.env`.
 
-A questo punto creare nel progetto una cartella *public* e al suo interno inserire il file *index.php*, che diventerà il front-controller dell'applicazione, cioè ogni richiesta passerà attraverso di lui.
+In questa versione del progetto il front-controller è `index.php` nella cartella `www`.
 
 Il contenuto di questo file può essere popolato in questo modo
 
@@ -52,7 +92,8 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 
-require __DIR__ . '/../vendor/autoload.php';
+require 'vendor/autoload.php';
+require_once 'conf/config.php';
 
 $app = AppFactory::create();
 
@@ -76,7 +117,7 @@ Le parti più importanti di questo codice sono:
 4. Nel corpo della funzione avviene la scrittura del body della risposta, utilizzando il metodo `write` applicato appunto al body e scrivendo quello che si vuole sia contenuto nella pagina di risposta (**attenzione**: il body della risposta è quello relativo al protocollo HTTP, non ha nulla a che vedere con il body della pagina HTML, hanno solo lo stesso nome).
 
 
-In questa versione dell'esempio non viene usato un prefisso applicativo: l'applicazione espone le rotte direttamente dalla root del sito e nei template i link vengono scritti in modo root-relative, ad esempio `/negozio`, `/admin` o `/login`.
+L'applicazione espone le rotte direttamente dalla root del sito e nei template i link vengono scritti in modo root-relative, ad esempio `/negozio`, `/admin` o `/login`.
 
 ## Configurare Apache per l'URL rewriting
 
@@ -87,98 +128,114 @@ codice che dovrà gestire ogni particolare richiesta.
 
 Se quindi l'applicazione ha bisogno che tutte le richieste HTTP arrivino al file *index.php*, è necessario istruire il web server per fare in modo che ogni richiesta che arriva, indipendentemente dall'URL effettivo, venga dirottata sul file `index.php`.
 
-Usando Apache presente in Xampp bisogna seguire questi passi:
-- abilitare il modulo di URL rewriting. Per far questo aprire con un editor di testo (anche PHPStorm va bene) il file ```directory_di_xampp/apache/conf/httpd.conf``` e controllare se la riga
-```apacheconf
-LoadModule rewrite_module modules/mod_rewrite.so
-```
-ha un **#** davanti. Se così fosse va eliminato e altrettanto va
-fatto per la riga
-```apacheconf
-LoadModule actions_module modules/mod_actions.so
-```
+Nel progetto attuale questa parte è già predisposta nella configurazione del container `web`.
 
-A questo punto bisogna far partire o ripartire Apache e la configurazione
-dovrebbe essere corretta (per ulteriori informazioni consultare [questa pagina](https://www.slimframework.com/docs/v4/start/web-servers.html) oppure Google).
+La riscrittura delle URL è gestita dal file `.htaccess` presente in `www/`, con questo contenuto:
 
-Infine, per fare in modo che tutte le richieste vengano dirottate sul file `index.php` che si trova nella cartella `public`[^cartella_public] bisogna aggiungere nella cartella
-principale, *template_slim* in questo esempio, un file *.htaccess* con il seguente contenuto:
 ```apacheconf
 RewriteEngine On
 
-RewriteRule ^ public/index.php [QSA,L]
+#Queste prime due righe servono per servire gli assets, in pratica
+#istruiscono Apache a restituire un file se esiste, piuttosto che girare
+#la richiesta a index.php
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [QSA,L]
 ```
 
-[^cartella_public]: Il motivo per il quale il file `index.php` viene inserito nella cartella `public` e non nella root del progetto
-è legato alla sicurezza dell'applicazione, anche se qui non verrà approfondito questo tema.
+Le due condizioni hanno un ruolo importante:
 
-Adesso dovrebbe essere sufficiente inserire l'indirizzo ```localhost/template_slim``` (o quello relativo a dove si è deciso
-di mettere l'applicazione) nella barra degli indirizzi del browser e dovrebbe apparire una pagina con la scritta **Hello world**. Per ulteriore conferma provare a inserire ```localhost/slim/altra_pagina``` e dovrebbe comparire il testo **Questa è un'altra pagina**.
+- `RewriteCond %{REQUEST_FILENAME} !-d`: se la richiesta punta a una directory esistente, Apache non la riscrive.
+- `RewriteCond %{REQUEST_FILENAME} !-f`: se la richiesta punta a un file esistente (per esempio immagini, CSS o JS), Apache non la riscrive.
+
+In tutti gli altri casi la richiesta viene inoltrata a `index.php`, che funge da front-controller dell'applicazione.
 
 ## Gestione degli errori
-Slim prevede già un meccanismo di gestione degli errori/eccezioni con un proprio Middleware[^middleware] e per attivarlo è sufficiente introdurre questa riga di codice
+Slim prevede già un meccanismo di gestione degli errori/eccezioni con un proprio Middleware[^middleware].
+Nel progetto attuale viene configurato così:
 
 ```php
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+$errorMiddleware = $app->addErrorMiddleware(APP_DEBUG, true, true);
+if (APP_USE_CUSTOM_ERROR_HANDLER) {
+    $errorMiddleware->setDefaultErrorHandler($customErrorHandler);
+}
 ```
+
+Il primo parametro (`APP_DEBUG`) decide se mostrare i dettagli degli errori in output:
+
+- in sviluppo, di solito è `true`
+- in produzione, di solito è `false`
+
+I valori arrivano dalle variabili ambiente lette in `conf/config.php`.
+
+Oltre al middleware standard, in `index.php` è definita anche una callback personalizzata (`$customErrorHandler`)
+che gestisce due casi specifici:
+
+- `HttpNotFoundException`: renderizza il template `404`
+- `HttpUnauthorizedException`: restituisce il messaggio `Utente non loggato`
+
+In questo modo puoi scegliere se usare il comportamento standard di Slim o quello personalizzato,
+semplicemente cambiando `APP_USE_CUSTOM_ERROR_HANDLER` nel file `.env`.
 
 [^middleware]: Per *middleware* in questi contesti si intende uno strato di software che si interpone tra la richiesta dell'utente e l'applicazione 
 vera e proprio, per svolgere delle funzionalità che sono comuni a 
 moltissime applicazioni e che, quindi, possono essere riutilizzate
 senza bisogno di particolari modifiche. Esempi di middleware sono appunto la gestione delle eccezioni e l'autenticazione.
 
-Di default il comportamento è quello di intercettare errori/eccezioni e mandare in risposta una pagina HTML con le informazioni sul problema, eventualmente con anche i dettagli dello stack di chiamate nel caso il 
-primo parametro fosse uguale a ```true```, come nell'esempio qua sopra. Gli altri due parametri sono rilevanti solo se si utilizza un meccanismo di *logging*, per maggiori informazioni fare riferimento 
-alla [documentazione ufficiale](https://www.slimframework.com/docs/v4/middleware/error-handling.html).
+Per maggiori dettagli sul middleware errori di Slim: [documentazione ufficiale](https://www.slimframework.com/docs/v4/middleware/error-handling.html).
+
+### Da qui in poi: focus SSR
+
+La struttura vista fin qui (bootstrap dell'app, routing, middleware, controller e accesso ai dati) può essere
+usata sia per applicazioni SSR sia per REST API. La parte comune è la pipeline della richiesta; cambia soprattutto
+come viene costruita la risposta finale.
+
+Da questo punto in avanti il percorso didattico prosegue con **SSR**: i controller renderizzano template HTML
+sul server e inviano al browser una pagina già pronta.
+
+```mermaid
+flowchart LR
+    A[Client HTTP] --> B[Routing Slim]
+    B --> C[Controller]
+    C --> D[Logica applicativa / Repository]
+    D --> E{Risposta}
+    E --> F[SSR: HTML renderizzato lato server]
+    E --> G[REST: JSON API]
+```
 
 ## Utilizzare Plates
-Volendo utilizzare la libreria di templates Plates, come già fatto in precedenza, dovrà essere
-importata con il solito comando
-```bash
-composer require league/plates
-```
-e nel codice andrà indicata con 
-```php
-use League\Plates\Engine;
-```
+Nel progetto attuale la generazione delle pagine HTML lato server viene fatta con Plates,
+integrato in Slim tramite container DI.
 
-ed è poi buona cosa utilizzare un [Dipendency Injector](https://en.wikipedia.org/wiki/Dependency_injection) per utilizzarla all'interno di Slim. Senza dilungarsi sul concetto
-di Dipendency Injection, lo scopo è quello di separare in maniera pulita un servizio (in questo caso
-Plates) dall'applicazione vera e propria che utilizzerà quel servizio.
-In pratica per ottenere lo scopo bisogna prima importare una libreria che implementi il meccanismo
-di DI, e Slim suggerisce di utilizzare PHP-DI, e con Composer si fa
-
-```bash
-composer require php-di/slim-bridge:* --with-all-dependencies
-```
-
-Fatto questo, basterà aggiungere nel codice la creazione del Container, che poi dovrà essere
-passato all'applicazione
+Nel bootstrap (`index.php`) viene creato il container, associato all'applicazione e usato
+per registrare un servizio chiamato `template`:
 
 ```php
 $container = new Container();
 //da inserire prima della create di AppFactory
 AppFactory::setContainer($container);
-```
 
-Per aggiungere dei servizi al container è sufficiente usare il metodo ```set```, che nel caso specifico
-di Plates verrà fatto in questo modo
-
-```php
 $container->set('template', function (){
-    return new Engine('templates', 'tpl');
+    $engine = new Engine(TEMPLATE_DIR, 'tpl');
+    $user = Authenticator::getUser();
+    $username = isset($user['username']) ? $user['username'] : null;
+    $engine->addData([
+        'user' => $username,
+        'images_base_url' => IMAGES_BASE_URL,
+        'assets_base_url' => ASSETS_BASE_URL,
+        'upload_max_file_size' => UPLOAD_MAX_FILE_SIZE,
+    ]);
+    return $engine;
 });
 ```
-dove il primo parametro è la chiave per recuperare il servizio e il secondo è la funzione anonima
-che ritorna il servizio, occupandosi della sua creazione. 
 
-**Attenzione**: il primo parametro del costruttore dell'Engine deve come al solito contenere la cartella
-dove poi verranno inseriti i vari template, ma il percorso deve essere relativo al file dove si trovano
-queste istruzioni: nel progetto attuale il file `index.php` si trova direttamente nella cartella `www`, quindi è sufficiente indicare `templates`.
-Non è necessario aggiungere ai template una variabile dedicata ai percorsi, perché i link possono essere scritti direttamente in forma root-relative, ad esempio `/negozio` o `/admin`.
+In questo modo:
 
-Una volta aggiunto Plates nel container, per poterlo utilizzare basterà aggiungere del codice come il
-seguente nelle callback per le rotte su cui vogliamo usare dei template.
+- `TEMPLATE_DIR` (da `conf/config.php` e variabili ambiente) indica la cartella dei template
+- i dati condivisi via `addData(...)` sono disponibili in tutti i file `.tpl`
+- i template possono usare URL root-relative e variabili comuni senza duplicare codice
+
+Per usare Plates dentro una route, si recupera il servizio dal container e si chiama `render(...)`:
 
 ```php
 $app->get('/saluti/{name}', function (Request $request, Response $response, $args) {
@@ -192,70 +249,50 @@ $app->get('/saluti/{name}', function (Request $request, Response $response, $arg
     return $response;
 });
 ```
-In questo esempio ci sono due aspetti della libreria `Slim` che
-devono essere approfonditi:
-1. La rotta contiene al suo interno una parte parametrica, inclusa tra le parentesi graffe, in questo esempio *name*. Quel parametro indica che una rotta in cui la prima parte è `/saluti/` verrà intercettata.
-2. La parte parametrica verrà recuperata attraverso il parametro `$args`, che sarà la libreria stessa a popolare con gli eventuali argomenti passati attraverso la GET, in questo caso appunto il `name`. Se quindi la rotta fosse `GET /saluti/alessandro`, il vettore `$args` avrà una chiave di nome `name` il cui valore sarà `alessandro`, valore che potrà essere recuperato come si può vedere nel codice con la solita notazione `$args['name']`.
+
+Nel caso dell'esempio, il parametro di rotta `{name}` viene letto da `$args['name']` e passato al template
+`saluti.tpl`.
 
 
 ## Connessione al database
 
-Per utilizzare il database e dare un minimo di organizzazione, conviene isolare
-l'aspetto della connessione in una classe apposita, che avrà un metodo da invocare ogni volta che nell'applicazione è necessario recuperare dei dati dal DB.
-Per far questo vien creato un file, *config.php* all'interno della cartella *conf*, che conterrà le informazioni necessarie alla connessione in questo modo:
+Nel progetto attuale i parametri di connessione arrivano dalle variabili ambiente e vengono
+centralizzati in `conf/config.php`.
 
 ```php
-const DB_HOST = 'host';
-const DB_NAME = 'db_name';
-const DB_USER = 'user';
-const DB_PASSWORD = 'password';
-const DB_CHAR = 'utf8';
+define('DB_HOST', $_ENV['MYSQL_HOST'] ?? 'database');
+define('DB_NAME', $_ENV['MYSQL_DATABASE'] ?? '');
+define('DB_USER', $_ENV['MYSQL_USER'] ?? '');
+define('DB_PASSWORD', $_ENV['MYSQL_PASSWORD'] ?? '');
+define('DB_CHAR', 'utf8mb4');
 ```
-con i parametri opportunamente configurati per la propria connessione.
 
-La classe che fornirà la connessione vera e propria verrà invece creata nel file *Connection.php* 
-all'interno della cartella *Util*.
+In questo modo la configurazione è unica e può cambiare tra ambienti (sviluppo, test, produzione)
+senza modificare il codice PHP.
 
-Per poter utilizzare in ogni punto dell'applicazione questa nuova classe sarà necessario indicare
-al meccanismo di *autoloading* dove recuperarla, in modo da non sia necessario dover includere
-a mano i file ogni volta.
-Per far questo nel file *Connection.php* sarà necessario aggiungere la linea
+La connessione vera e propria è incapsulata in `Util/Connection.php`, che espone un metodo statico
+`getInstance()` per ottenere un oggetto `PDO` riutilizzabile dai repository.
+
+L'idea è:
+
+- i repository non conoscono i dettagli del DSN
+- la connessione viene creata in un solo punto
+- il resto del codice usa sempre `Connection::getInstance()`
+
+Esempio d'uso dentro un repository:
 
 ```php
-namespace Util;
+public static function listAll(){
+    $pdo = Connection::getInstance();
+    $risposta = $pdo->query("SELECT * FROM prodotto");
+    return $risposta->fetchAll();
+}
 ```
-
-e poi ricostruire i file di autoloading aggiungendo le righe 
-
-```php
-  "autoload": {
-    "psr-4": {
-      "Util\\" : "Util/"
-    }
-  },
-```
-all'interno di *composer.json* e chiamando **composer** in questo modo
-
-```bash
-composer update
-```
-in modo che aggiorni i file all'interno della cartella *vendor* per permettere il caricamento 
-della classe *Connection*, che quindi sarà utilizzabile semplicemente aggiungendo
-la riga
-
-```php
-use Util\Connection;
-```
-all'inizio di ogni file che la vorrà utilizzare, nel nostro caso *index.php*.
-
-La classe *Connection* avrà un solo attributo statico, ```$pdo```, che rappresenta appunto la connessione al DB, avrà il costruttore privato perchè non è pensata per essere istanziata e
-un metodo ```getInstance()``` che restituisce la connessione, istanziando la connessione se è la prima volta
-che viene chiamato in uno script oppure restituendo la connessione corrente se esiste già.
-Si veda il contenuto di *Connection.php* per maggiori dettagli.
 
 ## Gestione dei dati presenti nel DB con il pattern MVC
 
-Dove la View in queste applicazioni è il *template*, per quanto riguarda il Model si procederà come visto in precedenza, dove per il controller si creeranno delle classi  in base alle esigenze dell'applicazione.
+In questa applicazione la **View** è composta dai template Plates (`.tpl`), il **Model** è rappresentato
+dai repository, e i **Controller** orchestrano la logica tra richiesta HTTP, model e risposta.
 
 ### Esempio della gestione di un negozio
 
@@ -273,11 +310,13 @@ string genere "Uomo o donna"
 }
 ```
 
-## La classe ProdottoRepository
+## Repository: `ProdottoRepository`
 
-L'implementazione del modello verrà realizzata creando una classe (o più classi) apposita che contenga al proprio interno i metodi ritenuti opportuni per l'interazione con i dati. Questi metodi saranno *statici*, in quanto la classe non verrà utilizzata per creare oggetti, ma solo per avere un'organizzazione dei metodi ordinata.
+`Model/ProdottoRepository.php` incapsula le query SQL sulla tabella `prodotto`.
+Nel progetto attuale espone metodi per:
 
-Per la tabella `prodotto` un possibile insieme di metodi, con la relativa implementazione, potrebbe essere il seguente:
+- lettura (`listAll`, `listAllMale`, `listAllFemale`, `getProdotto`)
+- scrittura (`add`, `update`, `delete`)
 
 ```php
 class ProdottoRepository{
@@ -299,89 +338,188 @@ class ProdottoRepository{
         $risposta = $pdo->query('SELECT * FROM prodotto WHERE genere = "Donna"');
         return $risposta->fetchAll();
     }
+
+    public static function getProdotto(int $id){
+        $pdo = Connection::getInstance();
+        $risposta = $pdo->prepare('SELECT * FROM prodotto WHERE id = :id');
+        $risposta->execute(['id' => $id]);
+        return $risposta->fetch();
+    }
 }
 ```
-dove il primo metodo recupera la lista di tutti i prodotti, il secondo di tutti quelli di genere maschile e il terzo di tutti quelli di genere femminile. L'implementazione specifica potrebbe essere anche diversa, con, ad esempio, i due metodi per i generi che chiamano un unico metodo in cui il genere è un parametro, ma questo non è rilevante per chi li utilizzerà, in quanto quello che conta è che, chiamandoli, riceverà in cambio un vettore contenente i capi di abbigliamento desiderati. 
 
-## La classe ProdottoController
+Il controller usa questi metodi senza doversi occupare direttamente di SQL.
 
-Il *controller* si occuperà invece di far interagire la vista con il modello, prendendo gli input forniti dalla vista, generalmente sotto forma di parametri GET o POST, elaborando l'azione o le azioni opportune per recuperare i dati di interesse dal database, e infine iniettando il risultato nella vista opportuna.
+## Controller: `ProdottoController` e `AdminController`
 
-Anche in questo caso un'implementazione ragionevole potrebbe essere la seguente:
+I controller in `Controller/` ricevono richiesta/risposta, chiamano i repository e producono
+la risposta finale (SSR HTML o redirect).
 
 ```php
 class ProdottoController{
 
-    private Engine $templateEngine;
+    private $container;
 
-    public function __construct(Engine $templateEngine){
-        $this->templateEngine = $templateEngine;
+    public function __construct(ContainerInterface $container)
+    {
+        $this->container = $container;
     }
 
-    public function listAll(){
-        return $this->listAllByGenre('All');
+    public function listAll(Request $request, Response $response, array $args): Response
+    {
+        return $this->listAllByGenre($request, $response, ['genere' => 'All']);
     }
 
-    public function listAllByGenre($genere){
-        if ($genere === 'All')
-            $prodotti = ProdottoRepository::listAll();
-        else if ($genere === 'Uomo')
+    public function listAllByGenre(Request $request, Response $response, array $args): Response
+    {
+        $genere = $args['genere'];
+        if ($genere === 'Uomo')
             $prodotti = ProdottoRepository::listAllMale();
-        else
+        else if ($genere === 'Donna')
             $prodotti = ProdottoRepository::listAllFemale();
-        return $this->templateEngine->render('negozio',
+        else
+            $prodotti = ProdottoRepository::listAll();
+        $engine = $this->container->get('template');
+        $response->getBody()->write($engine->render('negozio',
             [
                 'prodotti' => $prodotti,
                 'genere' => $genere
             ]
-        );
-
+        ));
+        return $response;
     }
 }
 ```
 
-A differenza del modello, in questo caso si è preferito avere una classe di cui istanziare degli oggetti e che avesse come unico attributo un riferimento al `template`, sotto forma di un oggetto di tipo `Engine`, visto in precedenza e che rappresenta il modo in cui Plates gestisce la generazione di template. 
+`AdminController` gestisce invece autenticazione, form di inserimento/modifica, upload immagini e operazioni CRUD amministrative.
 
-Creando quindi un oggetto di tipo `ProdottoController`, nel costruttore si passerà l'oggetto per la gestione del template, in modo che nel codice dei vari metodi il controller possa utilizzarlo per il render del codice HTML. Guardando ad esempio il metodo `listAllByGenre`, il cui scopo è quello di restituire la lista dei prodotti in base al genere desiderato, che può essere *All*, *Donna* o *Uomo*, si vede che il codice si interfaccia con il modello per chiedere l'elenco desiderato in base al genere, e, successivamente, utilizza i dati recuperati per passarli al template che si preoccuperà di farne la resa in HTML, ritornando proprio l'HTML generato.
+### Aggancio tra rotta e metodo del controller
 
-In questo esempio il template, `negozio.tpl`, avrà una struttura di questo tipo:
+In `index.php` l'aggancio avviene con la sintassi:
 
-```html
-<!doctype html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <title>Esempio negozio con pattern MVC</title>
-</head>
-<body>
-    <h1>Esempio negozio con pattern MVC</h1>
-    <p><a href="/negozio">Tutti i capi</a></p>
-    <p><a href="/negozio/genere/Donna">Abbigliamento femminile</a></p>
-    <p><a href="/negozio/genere/Uomo">Abbigliamento maschile</a></p>
-    <h2>Lista dei prodotti: <?=$genere?></h2>
-    <ul>
-        <?php foreach ($prodotti as $prodotto): ?>
-            <li><?=$prodotto['nome']?>: <i><?=$prodotto['descrizione']?></i></li>
-        <?php endforeach;?>
-    </ul>
-</body>
-</html>
+`ControllerClass::class . ':nomeMetodo'`
+
+Esempi reali del progetto:
+
+```php
+$app->get('/negozio', ProdottoController::class . ':listAll');
+$app->get('/negozio/genere/{genere}', ProdottoController::class . ':listAllByGenre');
+
+$app->get('/admin/prodotto[/{id}]', AdminController::class . ':formProdotto');
+$app->post('/admin/prodotto[/{id}]', AdminController::class . ':addProdotto');
 ```
 
-e la resa, con la rotta `GET /negozio/genere/Donna` potrebbe essere la seguente pagina:
+Come funziona in pratica:
+
+1. Slim intercetta la rotta (`/negozio`, `/admin/prodotto/...`, ...).
+2. Istanzia il controller passando il container nel costruttore.
+3. Invoca il metodo indicato dopo `:`.
+4. Passa al metodo `Request`, `Response` e gli eventuali parametri di rotta (`$args`).
+
+Le parti tra `{}` sono parametri obbligatori (es. `{genere}`), mentre `[/{id}]` indica una parte opzionale.
+
+### Esempio di resa SSR con template
+
+Il metodo `listAllByGenre` renderizza `negozio.tpl`. Un estratto reale del template è:
+
+```html
+<?php $this->layout('home', ['title' => 'Negozio']) ?>
+
+<article>
+    <header>
+        <h1>Esempio negozio con pattern MVC</h1>
+        <h2>Lista dei prodotti: <?=$genere?></h2>
+    </header>
+
+    <ul>
+        <?php foreach ($prodotti as $prodotto): ?>
+            <li>
+                <a href="/negozio/prodotto/<?=$prodotto['id']?>"><?=$prodotto['nome']?></a>
+                <small><?=$prodotto['descrizione']?></small>
+            </li>
+        <?php endforeach;?>
+    </ul>
+</article>
+```
+
+Con la rotta `GET /negozio/genere/Donna` la resa può essere, ad esempio, la seguente:
 
 ![Esempio della pagina dell'elenco dei prodotti](esempio.png)
+
+## Autenticazione
+
+L'autenticazione in questa applicazione ha uno scopo preciso e limitato: garantire che solo
+l'amministratore possa accedere al backend di gestione dei prodotti (rotte `/admin/...`).
+Gli utenti del negozio non vengono gestiti: la parte pubblica (`/negozio/...`) è liberamente
+accessibile senza alcun login.
+
+### Come funziona il middleware di autenticazione
+
+In `index.php` è registrato un middleware che intercetta ogni richiesta prima che arrivi al controller.
+La logica è semplice:
+
+- le rotte che iniziano con `/negozio` passano sempre senza controlli
+- la rotta `/login` passa sempre (altrimenti l'amministratore non potrebbe autenticarsi)
+- tutte le altre rotte richiedono una sessione attiva; se non c'è, viene lanciata una `HttpUnauthorizedException`
+
+### La classe `Util/Authenticator`
+
+`Authenticator` è una classe di utilità con costruttore privato (non viene mai istanziata direttamente).
+Espone due metodi statici:
+
+- `getUser()`: restituisce i dati dell'utente loggato, oppure `null` se non c'è sessione attiva
+- `logout()`: distrugge la sessione corrente
+
+Il flusso di `getUser()` è il seguente:
+
+```mermaid
+flowchart TD
+    A[getUser chiamato] --> B{POST username presente?}
+    B -- Sì --> C[Verifica credenziali su DB via UserRepository]
+    C --> D{Credenziali valide?}
+    D -- Sì --> E[Salva utente in _SESSION]
+    D -- No --> F[Sessione non modificata]
+    B -- No --> F
+    F --> G{_SESSION user esiste?}
+    E --> G
+    G -- Sì --> H[Ritorna dati utente]
+    G -- No --> I[Ritorna null]
+```
+
+In pratica, `getUser()` svolge due compiti in uno: se nella richiesta ci sono le credenziali POST
+(cioè se il form di login è stato inviato), tenta il login e aggiorna la sessione; in ogni caso
+restituisce l'utente corrente dalla sessione, o `null` se non c'è.
+
+### Le sessioni PHP
+
+PHP gestisce le sessioni tramite un cookie di sessione sul browser e un file (o altra struttura)
+sul server. `session_start()` associa la richiesta corrente a una sessione esistente, oppure ne crea
+una nuova. Le variabili in `$_SESSION` sono persistenti tra una richiesta e l'altra per lo stesso
+utente, finché la sessione non scade o viene esplicitamente distrutta con `session_destroy()`.
+
+In questo progetto la sessione viene avviata al primo accesso a `getUser()` (tramite il metodo
+privato `start()`), ed è usata esclusivamente per memorizzare le informazioni dell'amministratore
+autenticato (`$_SESSION['user']`).
+
+### Dati dell'utente nei template
+
+Quando il container `template` viene inizializzato in `index.php`, viene chiamato `getUser()` per
+leggere l'eventuale utente in sessione e passare il suo username a tutti i template tramite
+`addData(['user' => $username])`. Questo permette ai template di mostrare i controlli admin
+(o nasconderli) in base allo stato del login, senza che ogni singolo controller debba occuparsene.
 
 # Riassunto
 Riassumendo quanto visto finora:
 
-- l'applicazione ha un file che funge da *front-controller*, cioè un file a cui arrivano tutte le richieste, indipendentemente dall'URL, che si preoccuperà di dirottarle al controller opportuno. Questo file sarà sempre il file `index.html` e sarà all'interno della cartella `public`
-- il server web, in questo caso Apache, deve essere configurato per ridirigere tutte le richieste al *front-controller*
-- le configurazioni del database o altro vanno inserite nel file `config.php` all'interno della cartella `conf`
-- la connessione al database viene gestita dalla classe `Connection`
-- il modello dei dati viene incapsulato nella classe, o nelle classi, che "parlano" direttamente con il database e restituiscono, tramite metodi statici, dei vettori contenenti le informazioni desiderate. Per convenzione i modelli verranno messi nella cartella `Model` e saranno chiamati con il nome che rappresenta i dati, ad esempio *Prodotto*, seguito dalla parola *Repository*
-- il controller, che si occupa dell'interazione con la vista e il modello, sarà una classe, o più classi, contenente un riferimento al template, che verrà referenziato da un parametro all'atto della creazione dell'oggetto, e i metodi per rappresentare le funzionalità dell'applicazione. Per convenzione i controller verranno messi nella cartella 'Controller' e saranno chiamati con un nome che ne rappresenta la funzionalità, ad esempio *Prodotto*, seguito dalla parola *Controller*
+- il front-controller è `www/index.php`, che riceve le richieste e le instrada tramite il router di Slim
+- Apache nel container usa `.htaccess` per inoltrare a `index.php` solo le richieste che non corrispondono a file o directory reali
+- la configurazione applicativa e database è centralizzata in `www/conf/config.php` e alimentata da variabili ambiente (`.env`)
+- la connessione al DB è incapsulata in `Util/Connection`, mentre le query stanno nei repository (`Model/`)
+- i controller (`Controller/`) orchestrano richiesta, model e risposta SSR (render template) o redirect
+- l'aggancio tra rotta e metodo usa la forma `ClasseController::class . ':metodo'`, con parametri in `{...}` e segmenti opzionali in `[...]`
+- l'autenticazione è gestita da `Util/Authenticator` tramite sessioni PHP ed è usata solo per proteggere il backend admin; la parte pubblica del negozio non richiede login
+- lo stato di autenticazione viene propagato a tutti i template tramite `addData(...)` nel momento in cui il container viene inizializzato
 
-La struttura delle cartelle sarà quindi la seguente:
+La struttura delle cartelle è la seguente:
 
 ![Struttura delle cartelle di un'applicazione Slim organizzata secondo il pattern MVC](struttura.png)
