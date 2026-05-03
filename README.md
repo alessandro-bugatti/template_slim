@@ -1,11 +1,13 @@
-	# Nome Progetto
+# Template per il sito di vendita di un negozio online
 
-Descrizione breve del progetto didattico.
+Questo progetto serve come base per qualsiasi progetto SSR (Server Side Rendering)
+che utilizza Slim come libreria PHP per gestire come routing, middleware vari e autenticazione. Il `readme.md` che si trova nella cartella `www` spiega nel dettaglio come è strutturato il progetto, questo file è orientato solo a spiegare come far partire
+l'applicazione.
 
 ## Requisiti
 
 - Docker Desktop (Windows/Mac) o Docker Engine (Linux) installato
-- Immagine base `didattica-php:latest` già costruita (vedi `docker-base-image/`)
+- Immagine base `didattica-php:latest` già costruita (vedi `docker-base-image/`) del repository [docker-didattica](https://github.com/alessandro-bugatti/docker-didattica)
 
 ## Avvio rapido
 
@@ -56,11 +58,9 @@ progetto/
 └── www/                        # Codice PHP (montato via bind mount)
     ├── conf/
     │   └── config.php          # Configurazione applicazione (DB, env, ecc.)
-    ├── public/                 # Asset statici (css, js, img)
-    ├── src/
-    │   ├── Controller/
-    │   ├── Model/
-    │   └── Util/
+    ├── Controller/
+    ├── Model/
+    ├── Util/
     ├── storage/                # File caricati dagli utenti (non committare)
     ├── templates/              # Template HTML (Plates)
     ├── vendor/                 # Dipendenze Composer (non committare)
