@@ -27,6 +27,7 @@ CREATE TABLE `prodotto` (
   `nome` varchar(50) NOT NULL,
   `descrizione` varchar(255) NOT NULL,
   `prezzo` float NOT NULL,
+  `image` varchar(255),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -36,7 +37,8 @@ CREATE TABLE `prodotto` (
 --
 
 LOCK TABLES `prodotto` WRITE;
-INSERT INTO `prodotto` VALUES (1,'Camicia','Camicia Prada in lino egiziano con collo alto.',230),(3,'Pantaloni grigi','Pantaloni con taglio classico di fustagno',50);
+INSERT INTO `prodotto` VALUES (1,'Camicia','Camicia Prada in lino egiziano con collo alto.',230, 'camicia.jpg'),
+                              (3,'Pantaloni grigi','Pantaloni con taglio classico di fustagno',50, 'pantaloni.jpg');
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
